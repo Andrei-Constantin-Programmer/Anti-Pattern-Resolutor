@@ -1,0 +1,14 @@
+# Vector database
+chromadb
+# LangGraph core
+langchain
+langgraph
+langsmith
+langchain-community
+langchain-core
+langchain-ibm
+langchain-ollama
+# Test
+pytest
+# Utilities
+ipython

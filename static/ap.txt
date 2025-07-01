@@ -1,0 +1,52 @@
+examples = [
+    {
+        "id": "ap1",
+        "document": "A class that has too many responsibilities and contains thousands of lines of code.",
+        "type": "God Class"
+    },
+    {
+        "id": "ap2",
+        "document": "A method that heavily uses fields and methods from another class.",
+        "type": "Feature Envy"
+    },
+    {
+        "id": "ap3",
+        "document": "A catch block that uses 'catch (Exception e)' without specific handling logic.",
+        "type": "Generic Exception Catch"
+    },
+    {
+        "id": "ap4",
+        "document": "A subclass overrides only one method of its superclass and does not add any new behavior.",
+        "type": "Speculative Generality"
+    },
+    {
+        "id": "ap5",
+        "document": "A method that requires many parameters, making it hard to understand and use.",
+        "type": "Long Parameter List"
+    },
+    {
+        "id": "ap6",
+        "document": "Classes with nearly identical code blocks that should be merged or refactored.",
+        "type": "Duplicate Code"
+    },
+    {
+        "id": "ap7",
+        "document": "A class that contains only static methods and no instance behavior.",
+        "type": "Utility Class"
+    },
+    {
+        "id": "ap8",
+        "document": "A switch statement that checks for class type to decide behavior.",
+        "type": "Type Checking"
+    },
+    {
+        "id": "ap9",
+        "document": "A class that directly accesses low-level resources like files or sockets in many places.",
+        "type": "Low-Level Module Exposure"
+    },
+    {
+        "id": "ap10",
+        "document": "A data class that only contains fields and no behavior (getters/setters only).",
+        "type": "Data Class"
+    }
+]
