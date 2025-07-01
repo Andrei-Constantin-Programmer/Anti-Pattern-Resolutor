@@ -1,7 +1,6 @@
 # Legacy Code Migration Tool
 
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Status](https://img.shields.io/badge/status-research-orange.svg)
 
 A cutting-edge research project developed in collaboration with **IBM Research** and **University College London (UCL)** to automatically migrate legacy Java codebases to modern, maintainable solutions using AI-powered antipattern detection and intelligent refactoring suggestions.
