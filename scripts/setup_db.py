@@ -1,6 +1,7 @@
 import sys
 import os
 from pathlib import Path
+import json
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -9,6 +10,7 @@ from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_ollama import OllamaEmbeddings
+from langchain_core.documents import Document
 
 from config.settings import settings
 # Loading the fix AP text file and splitting it into chunks
@@ -39,7 +41,12 @@ for filename in os.listdir(antipatterns_dir):
             
             for entry in data:
                 #Flatten into string when file is entered
-                content_parts = [f"{k.capitalize()}: {', '.join(v) if isinstance(v, list) else v}" for k, v in entry.items()]
+                content_parts = [
+                                    f"{k.capitalize()}: {', '.join(str(i) for i in v)}" if isinstance(v, list)
+                                    else f"{k.capitalize()}: {json.dumps(v) if isinstance(v, dict) else str(v)}"
+                                    for k, v in entry.items()
+                                ]
+
                 content = "\n".join(content_parts)
                 srp_documents.append(Document(page_content=content, metadata={"source": filename}))
 
