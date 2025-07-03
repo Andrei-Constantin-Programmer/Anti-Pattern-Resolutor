@@ -23,7 +23,7 @@ This tool leverages the power of Large Language Models (LLMs) and vector-based k
 The tool follows a modular, agent-based architecture:
 
 ```
-Legacy-Code-Migration/
+AntiPattern_Remediator/
 ├── 📁 src/                           # Core source code
 │   ├── 📁 core/                      # Analysis engine
 │   │   ├── 📁 agents/               # Specialized analysis agents
@@ -264,7 +264,7 @@ This is an active research project. We welcome contributions in several areas:
 
 ```bash
 # Clone with development dependencies
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 
 # Run tests
 python -m pytest tests/
@@ -285,12 +285,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **LangChain Community** - For the foundational LLM orchestration framework
 - **Ollama Project** - For making LLM deployment accessible and efficient
 
-## 📞 Support & Contact
+<!-- ## 📞 Support & Contact
 
 - 📧 **Email**: [project-email@domain.com]
 - 🐛 **Issues**: [GitHub Issues](https://github.com/your-repo/Legacy-Code-Migration/issues)
 - 📖 **Documentation**: [Wiki](https://github.com/your-repo/Legacy-Code-Migration/wiki)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/your-repo/Legacy-Code-Migration/discussions)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/your-repo/Legacy-Code-Migration/discussions) -->
 
 ---
 
