@@ -41,8 +41,6 @@ AntiPattern_Remediator/
 │           └── 💾 vector_db.py      # Vector DB operations
 ├── ⚙️ config/                       # Configuration management
 │   └── 📝 settings.py              # Application settings
-├── 📓 notebooks/                    # Interactive demonstrations
-│   └── 🎮 demos/                   # Tutorial notebooks
 ├── 🔧 scripts/                     # Utility scripts
 │   ├── 🚀 setup_db.py             # Database initialization
 │   └── ▶️ run_analysis.py          # Standalone analysis runner
@@ -154,17 +152,6 @@ result = workflow.invoke({
 print("Analysis Results:", result["answer"])
 ```
 
-### 📊 Interactive Notebooks
-
-Launch Jupyter for interactive exploration:
-```bash
-jupyter lab notebooks/demos/
-```
-
-Available demos:
-- 🎮 **Basic Antipattern Detection** - Introduction to core features
-- 🧪 **Advanced Analysis Workflow** - Deep dive into the analysis pipeline
-- 📈 **Custom Pattern Definition** - Creating your own antipattern rules
 
 ## ⚙️ Configuration
 
