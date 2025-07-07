@@ -3,10 +3,10 @@ Enhanced workflow management using LangGraph
 """
 
 from langgraph.graph import StateGraph
-from langchain_community.chat_models import ChatOllama
 from langchain.tools.retriever import create_retriever_tool
 
 from config.settings import settings
+from ..llm_models import LLMCreator
 from ..state import AgentState
 from ..agents import AntipatternScanner
 
@@ -35,7 +35,10 @@ class CreateGraph:
     
     def __init__(self, db_manager, llm_model=None):
         llm_model = llm_model or settings.LLM_MODEL
-        self.llm = ChatOllama(model=llm_model)
+        self.llm = LLMCreator.create_llm(
+            provider=settings.LLM_PROVIDER,
+            model_name=settings.LLM_MODEL
+         )
         self.db_manager = db_manager
         retriever = self.db_manager.as_retriever()
         retriever_tool = create_retriever_tool(

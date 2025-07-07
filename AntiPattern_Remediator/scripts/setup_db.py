@@ -9,10 +9,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-from langchain_ollama import OllamaEmbeddings
 from langchain_core.documents import Document
 
 from config.settings import settings
+from src.core.llm_models import EmbeddingCreator
 # Loading the fix AP text file and splitting it into chunks
 ap_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "ap.txt")
 loader = TextLoader(ap_file, encoding="utf-8")
@@ -56,7 +56,10 @@ all_docs = split_docs + srp_documents
 
 print("Number of documents loaded: ", len(all_docs))
 # Store the split documents in a vector database
-embedding = OllamaEmbeddings(model=settings.EMBEDDING_MODEL)
+embedding = EmbeddingCreator.create_embedding(
+    provider=settings.LLM_PROVIDER,
+    model_name=settings.EMBEDDING_MODEL
+)
 persist_dir = str(settings.VECTOR_DB_DIR)
 if not os.path.exists(persist_dir):
     os.makedirs(persist_dir)

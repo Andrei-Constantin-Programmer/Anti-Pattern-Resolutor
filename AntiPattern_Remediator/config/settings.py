@@ -52,8 +52,3 @@ class Settings:
 
 
 settings = Settings()
-
-LLM_PROVIDER = settings.LLM_PROVIDER
-LLM_MODEL = settings.LLM_MODEL
-EMBEDDING_MODEL = settings.EMBEDDING_MODEL
-VECTOR_DB_DIR = settings.VECTOR_DB_DIR

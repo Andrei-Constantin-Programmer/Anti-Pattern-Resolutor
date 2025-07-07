@@ -3,7 +3,6 @@
 Main entry point - Legacy Code Migration Tool
 """
 from src.core.graph import CreateGraph
-from src.core.state import AgentState
 from src.data.database import VectorDBManager
 
 def main():
