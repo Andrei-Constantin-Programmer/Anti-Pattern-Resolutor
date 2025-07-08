@@ -24,7 +24,7 @@ class LLMCreator:
         # if not watsonx_api_key:
         #     watsonx_api_key = getpass("Watson X API Key: ")
         #     os.environ["WATSONX_APIKEY"] = watsonx_api_key
-        watsonx_api_key = "DumEQrFTlzIBAS0NFBREVGqDpv0mdez8B861Z1zkB_7e"  
+        watsonx_api_key = "your_watsonx_api_key_here"  # Replace with your actual API key
         project_id = "0994b8ce-78cc-42ca-93fe-5112d16d0ec8"
         os.environ["WATSONX_APIKEY"] = watsonx_api_key
         parameters = {
