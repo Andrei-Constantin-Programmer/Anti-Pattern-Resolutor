@@ -98,7 +98,7 @@ class VLLMSettings(Settings):
 settings = None
 
 # Provider selection logic
-def get_settings(provider: str = "ibm") -> Settings:
+def get_settings(provider: str) -> Settings:
     """Get settings instance based on provider"""
     if provider == "ollama":
         settings_instance = OllamaSettings()
@@ -112,12 +112,12 @@ def get_settings(provider: str = "ibm") -> Settings:
         print("✅ Using vLLM settings")
     else:
         settings_instance = Settings()
-        print("⚠️  Using default settings")
+        print("⚠️ Using default settings")
     
     return settings_instance
 
 
-def initialize_settings(provider: str = "ollama") -> Settings:
+def initialize_settings(provider: str) -> Settings:
     """Initialize global settings with selected provider"""
     global settings
     settings = get_settings(provider)
@@ -125,4 +125,4 @@ def initialize_settings(provider: str = "ollama") -> Settings:
 
 
 # Initialize with default provider
-settings = get_settings("ollama")
+settings = get_settings("")
