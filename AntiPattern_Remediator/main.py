@@ -4,9 +4,23 @@ Main entry point - Legacy Code Migration Tool
 """
 from src.core.graph import CreateGraph
 from src.data.database import VectorDBManager
+from config.settings import initialize_settings
+from dotenv import load_dotenv
+load_dotenv()
 
 def main():
     """Main function: Run antipattern analysis"""
+    
+    # Let user select provider
+    print("Available providers: 1) ollama  2) ibm  3) vllm")
+    choice = input("Select provider (1-3): ").strip()
+    
+    provider_map = {"1": "ollama", "2": "ibm", "3": "vllm"}
+    provider = provider_map.get(choice, "ollama")  # default to ibm
+    
+    # Initialize global settings with selected provider
+    settings = initialize_settings(provider)
+    print(f"Using {settings.LLM_PROVIDER} with model {settings.LLM_MODEL}")
     
     # Example Java code
     legacy_code = """

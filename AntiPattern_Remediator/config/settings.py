@@ -6,6 +6,10 @@ import os
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Optional
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 @dataclass
@@ -39,8 +43,6 @@ class Settings:
         self.LLM_PROVIDER = os.getenv("LLM_PROVIDER", self.LLM_PROVIDER)
         self.LLM_MODEL = os.getenv("LLM_MODEL", self.LLM_MODEL)
         self.EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", self.EMBEDDING_MODEL)
-        self.API_BASE_URL = os.getenv("API_BASE_URL", self.API_BASE_URL)
-        self.API_KEY = os.getenv("API_KEY", self.API_KEY)
         
         self.DATA_DIR.mkdir(exist_ok=True)
         self.VECTOR_DB_DIR.mkdir(parents=True, exist_ok=True)
@@ -59,18 +61,22 @@ class IBMSettings(Settings):
     LLM_MODEL: str = "ibm/granite-3-3-8b-instruct"
     EMBEDDING_MODEL: str = "nomic-embed-text:latest" # This is a placeholder, IBM does not have a specific embedding model
 
-    watsonx_api_key: str = "DumEQrFTlzIBAS0NFBREVGqDpv0mdez8B861Z1zkB_7e"
-    project_id: str = "0994b8ce-78cc-42ca-93fe-5112d16d0ec8"
-    url: str = "https://us-south.ml.cloud.ibm.com"
+    # IBM Watson X configuration - these will be loaded from environment variables
+    watsonx_api_key: Optional[str] = None
+    project_id: Optional[str] = None
+    url: Optional[str] = None
     
     # IBM LLM parameters
     parameters: dict = None
     
     def __post_init__(self):
-        """Initialize IBM specific configuration"""
+        """Initialize IBM specific configuration from environment variables"""
         super().__post_init__()
         
-        os.environ["WATSONX_APIKEY"] = self.watsonx_api_key
+        # Load sensitive information from environment variables
+        self.watsonx_api_key = os.getenv("WATSONX_APIKEY") or os.getenv("IBM_WATSONX_API_KEY")
+        self.project_id = os.getenv("WATSONX_PROJECT_ID") or os.getenv("IBM_PROJECT_ID")
+        self.url = os.getenv("WATSONX_URL", self.url)
 
         if self.parameters is None:
             self.parameters = {
@@ -87,6 +93,9 @@ class IBMSettings(Settings):
 class VLLMSettings(Settings):
     pass
 
+
+# Global settings instance
+settings = None
 
 # Provider selection logic
 def get_settings(provider: str = "ibm") -> Settings:
@@ -108,6 +117,12 @@ def get_settings(provider: str = "ibm") -> Settings:
     return settings_instance
 
 
-# Initialize with selected provider
-provider = "ibm"  # Change this to switch providers: "ollama", "ibm", "vllm"
-settings = get_settings(provider)
+def initialize_settings(provider: str = "ollama") -> Settings:
+    """Initialize global settings with selected provider"""
+    global settings
+    settings = get_settings(provider)
+    return settings
+
+
+# Initialize with default provider
+settings = get_settings("ollama")
