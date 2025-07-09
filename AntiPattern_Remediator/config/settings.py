@@ -1,8 +1,5 @@
 """
-Configuration setti    # LLM configuration
-    LLM_PROVIDER: str = "ollama"
-    LLM_MODEL: str = "granite3.3:8b"
-    EMBEDDING_MODEL: str = "nomic-embed-text"for Legacy Code Migration Tool
+Configuration settings for Legacy Code Migration Tool
 """
 
 import os
@@ -13,8 +10,6 @@ from typing import Optional
 
 @dataclass
 class Settings:
-    """Configuration class for the Legacy Code Migration Tool"""
-    
     # Base configuration
     PROJECT_NAME: str = "Legacy Code Migration"
     VERSION: str = "1.0.0"
@@ -51,4 +46,68 @@ class Settings:
         self.VECTOR_DB_DIR.mkdir(parents=True, exist_ok=True)
 
 
-settings = Settings()
+@dataclass
+class OllamaSettings(Settings):
+    LLM_PROVIDER: str = "ollama"
+    LLM_MODEL: str = "granite3.3:8b"
+    EMBEDDING_MODEL: str = "nomic-embed-text:latest"
+
+
+@dataclass
+class IBMSettings(Settings):
+    LLM_PROVIDER: str = "ibm"
+    LLM_MODEL: str = "ibm/granite-3-3-8b-instruct"
+    EMBEDDING_MODEL: str = "nomic-embed-text:latest" # This is a placeholder, IBM does not have a specific embedding model
+
+    watsonx_api_key: str = "DumEQrFTlzIBAS0NFBREVGqDpv0mdez8B861Z1zkB_7e"
+    project_id: str = "0994b8ce-78cc-42ca-93fe-5112d16d0ec8"
+    url: str = "https://us-south.ml.cloud.ibm.com"
+    
+    # IBM LLM parameters
+    parameters: dict = None
+    
+    def __post_init__(self):
+        """Initialize IBM specific configuration"""
+        super().__post_init__()
+        
+        os.environ["WATSONX_APIKEY"] = self.watsonx_api_key
+
+        if self.parameters is None:
+            self.parameters = {
+                "decoding_method": "sample",
+                "max_new_tokens": 4000,
+                "min_new_tokens": 1,
+                "temperature": 0.5,
+                "top_k": 50,
+                "top_p": 1,
+            }
+
+
+@dataclass  
+class VLLMSettings(Settings):
+    pass
+
+
+# Provider selection logic
+def get_settings(provider: str = "ibm") -> Settings:
+    """Get settings instance based on provider"""
+    if provider == "ollama":
+        settings_instance = OllamaSettings()
+        print("✅ Using Ollama settings")
+    elif provider == "ibm":
+        settings_instance = IBMSettings()
+        print("✅ Using IBM Watson X settings")
+        print(f"📝 Model: {settings_instance.LLM_MODEL}")
+    elif provider == "vllm":
+        settings_instance = VLLMSettings()
+        print("✅ Using vLLM settings")
+    else:
+        settings_instance = Settings()
+        print("⚠️  Using default settings")
+    
+    return settings_instance
+
+
+# Initialize with selected provider
+provider = "ibm"  # Change this to switch providers: "ollama", "ibm", "vllm"
+settings = get_settings(provider)
