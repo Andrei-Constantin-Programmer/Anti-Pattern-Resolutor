@@ -22,15 +22,22 @@ class CreateGraph:
         "Here is additional context from the codebase:\n"
         "{context}\n\n"
         "Your task is to:\n"
-        "- Carefully analyze the code.\n"
-        "- Identify any Java antipatterns or design smells present.\n"
-        "- For each antipattern you find, include:\n"
-        "  - [Name of the antipattern] (e.g., God Object, Long Method)\n"
-        "  - [File or class/method name involved] (if detectable)\n"
-        "  - [Brief description] of the issue\n"
-        "  - [Why it's a problem]\n"
-        "  - [Suggested refactor]\n"
-        "Be thorough but concise. If no antipatterns are found, say so."
+        "- Carefully analyze the code for Java antipatterns and design smells.\n"
+        "- Return your analysis in JSON format with the following structure:\n\n"
+        '{{\n'
+        '  "total_antipatterns_found": 0,\n'
+        '  "antipatterns_detected": [\n'
+        '    {{\n'
+        '      "name": "<antipattern name>",\n'
+        '      "location": "<class/method name/line number>",\n'
+        '      "description": "<brief description>",\n'
+        '      "problem_explanation": "<why it\'s a problem>",\n'
+        '      "suggested_refactor": "<refactoring suggestion>"\n'
+        '    }}\n'
+        '  ]\n'
+        '}}\n\n'
+        "Be thorough but concise. Ensure the JSON is valid and properly formatted. "
+        "If no antipatterns are found, set total_antipatterns_found to 0 and antipatterns_detected to an empty array."
     )
     
     def __init__(self, db_manager, llm_model=None):
