@@ -5,6 +5,7 @@ Main entrypoint for prototype: Antipattern Detection and Refactoring Strategy Ge
 from agents.antipattern_scanner import AntipatternScanner
 from agents.strategist_agent import StrategistAgent
 from utils.watsonx_client import WatsonXClient
+import time
 
 
 def main():
@@ -34,19 +35,23 @@ def main():
     }
     """
 
+    #Modify code to read file, GET 
+
     model = WatsonXClient()
 
     # Antipattern analysis
     scanner = AntipatternScanner(model)
     analysis = scanner.analyze(code)
-    print("\n🔍 Antipattern Analysis:\n" + "="*60)
-    print(analysis)
+    print("\nAntipattern Analysis:\n" + "="*60)
+    print(analysis) #POST Analysis
+    
+    time.sleep(5)
 
     # Refactoring strategy
     strategist = StrategistAgent(model)
     strategy = strategist.suggest_refactorings(code, analysis)
-    print("\n🛠 Refactoring Strategy:\n" + "="*60)
-    print(strategy)
+    print("\nRefactoring Strategy:\n" + "="*60)
+    print(strategy) #POST Strategy
 
 
 if __name__ == "__main__":

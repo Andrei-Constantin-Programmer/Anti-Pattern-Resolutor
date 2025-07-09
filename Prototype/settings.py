@@ -18,7 +18,7 @@ class Settings:
     WATSONX_MODEL_ID: str = os.getenv("WATSONX_MODEL_ID", "ibm/granite-3-3-8b-instruct")
 
     # LLM inference settings
-    MAX_NEW_TOKENS: int = 300
+    MAX_NEW_TOKENS: int = 10000
     TEMPERATURE: float = 0.5
     DECODING_METHOD: str = "greedy"
 

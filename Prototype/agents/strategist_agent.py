@@ -17,6 +17,7 @@ class StrategistAgent:
             f"Code:\n{code}\n\n"
             f"Antipattern Analysis:\n{analysis}\n\n"
             "Please output a bulleted list of clear, professional recommendations."
+            "Please provide the refactored code as well"
         )
 
         try:
@@ -59,6 +60,6 @@ if __name__ == "__main__":
 
     strategist = StrategistAgent(model)
     strategy = strategist.suggest_refactorings(code, analysis)
-    print("\n📋 Suggested Strategies:")
+    print("\nSuggested Strategies:")
     print(strategy)
 

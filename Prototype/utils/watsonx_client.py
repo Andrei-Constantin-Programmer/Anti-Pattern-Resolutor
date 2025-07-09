@@ -25,7 +25,7 @@ class WatsonXClient:
             response = self.model.generate(prompt=prompt, params=self.params)
             return response["results"][0]["generated_text"]
         except Exception as e:
-            return f"❌ WatsonX inference failed: {e}"
+            return f"WatsonX inference failed: {e}"
 
 
 if __name__ == "__main__":
