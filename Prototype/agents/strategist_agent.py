@@ -17,7 +17,7 @@ class StrategistAgent:
             f"Code:\n{code}\n\n"
             f"Antipattern Analysis:\n{analysis}\n\n"
             "Please output a bulleted list of clear, professional recommendations."
-            "Please provide the refactored code as well"
+            "Keep over all answer short please"
         )
 
         try:
@@ -26,40 +26,3 @@ class StrategistAgent:
         except Exception as e:
             print(f"Error during strategy generation: {e}")
             return f"[ERROR] Strategy generation failed: {e}"
-
-
-if __name__ == "__main__":
-    from watsonx_client import WatsonXClient
-    from antipattern_scanner import AntipatternScanner
-
-    code = """
-    public class ApplicationManager {
-        private List<String> users = new ArrayList<>();
-        private List<String> logs = new ArrayList<>();
-
-        public void addUser(String user) {
-            users.add(user);
-            logs.add("User added: " + user);
-        }
-
-        public void removeUser(String user) {
-            users.remove(user);
-            logs.add("User removed: " + user);
-        }
-
-        public void printReport() {
-            System.out.println("Users: " + users);
-            System.out.println("Logs: " + logs);
-        }
-    }
-    """
-
-    model = WatsonXClient()
-    scanner = AntipatternScanner(model)
-    analysis = scanner.analyze(code)
-
-    strategist = StrategistAgent(model)
-    strategy = strategist.suggest_refactorings(code, analysis)
-    print("\nSuggested Strategies:")
-    print(strategy)
-

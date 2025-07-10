@@ -1,58 +1,96 @@
-"""
-Main entrypoint for prototype: Antipattern Detection and Refactoring Strategy Generator
-"""
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+import uuid
+from fastapi.middleware.cors import CORSMiddleware
+import time
 
 from agents.antipattern_scanner import AntipatternScanner
 from agents.strategist_agent import StrategistAgent
+from agents.code_generator import CodeGenerator
 from utils.watsonx_client import WatsonXClient
-import time
 
 
-def main():
-    code = """
-    public class ApplicationManager {
-        private List<String> users = new ArrayList<>();
-        private List<String> logs = new ArrayList<>();
 
-        public void addUser(String user) {
-            users.add(user);
-            logs.add("User added: " + user);
-        }
+app = FastAPI(
+    title="Antipattern Detection and Refactoring Strategy API",
+    version="1.0"
+)
 
-        public void removeUser(String user) {
-            users.remove(user);
-            logs.add("User removed: " + user);
-        }
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # You can restrict this to your frontend domain later
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-        public void printReport() {
-            System.out.println("Users: " + users);
-            System.out.println("Logs: " + logs);
-        }
+# In-memory session storage
+session_store = {}
 
-        public void backupData() {
-            System.out.println("Backing up users and logs...");
-        }
-    }
-    """
+class SessionRequest(BaseModel):
+    session_id: str
 
-    #Modify code to read file, GET 
+@app.post("/upload/")
+async def upload_file(file: UploadFile = File(...)):
+    if not file.filename.endswith(".java"):
+        raise HTTPException(status_code=400, detail="Only Java files are supported.")
+
+    contents = await file.read()
+    code = contents.decode("utf-8")
+
+    session_id = str(uuid.uuid4())
+    session_store[session_id] = {"code": code}
+
+    return JSONResponse(content={"session_id": session_id})
+
+
+@app.post("/analyze/")
+async def analyze_code(req: SessionRequest):
+    session_id = req.session_id
+    session = session_store.get(session_id)
+
+    if not session or "code" not in session:
+        raise HTTPException(status_code=404, detail="Session or code not found")
 
     model = WatsonXClient()
-
-    # Antipattern analysis
     scanner = AntipatternScanner(model)
-    analysis = scanner.analyze(code)
-    print("\nAntipattern Analysis:\n" + "="*60)
-    print(analysis) #POST Analysis
-    
-    time.sleep(5)
 
-    # Refactoring strategy
+    analysis = scanner.analyze(session["code"])
+    session["analysis"] = analysis
+
+    return JSONResponse(content={"antipattern_analysis": analysis})
+
+
+@app.post("/strategy/")
+async def strategy_suggestion(req: SessionRequest):
+    session_id = req.session_id
+    session = session_store.get(session_id)
+
+    if not session or "code" not in session or "analysis" not in session:
+        raise HTTPException(status_code=404, detail="Code or analysis not found in session")
+
+    model = WatsonXClient()
     strategist = StrategistAgent(model)
-    strategy = strategist.suggest_refactorings(code, analysis)
-    print("\nRefactoring Strategy:\n" + "="*60)
-    print(strategy) #POST Strategy
+
+    strategy = strategist.suggest_refactorings(session["code"], session["analysis"])
+    session["strategy"] = strategy
+
+    return JSONResponse(content={"refactoring_strategy": strategy})
 
 
-if __name__ == "__main__":
-    main()
+@app.post("/refactor/")
+async def generate_refactored_code(req: SessionRequest):
+    session_id = req.session_id
+    session = session_store.get(session_id)
+
+    if not session or "code" not in session or "strategy" not in session:
+        raise HTTPException(status_code=404, detail="Missing code or strategy in session")
+
+    model = WatsonXClient()
+    coder = CodeGenerator(model)
+
+    refactored_code = coder.generate_refactored_code(session["code"], session["strategy"])
+    session["refactored_code"] = refactored_code
+
+    return JSONResponse(content={"refactored_code": refactored_code})
