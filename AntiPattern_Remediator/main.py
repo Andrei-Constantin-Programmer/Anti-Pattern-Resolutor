@@ -16,7 +16,7 @@ def main():
     choice = input("Select provider (1-3): ").strip()
     
     provider_map = {"1": "ollama", "2": "ibm", "3": "vllm"}
-    provider = provider_map.get(choice, "ollama")  # default to ibm
+    provider = provider_map.get(choice, "ollama")  # default to ollama
     
     # Initialize global settings with selected provider
     settings = initialize_settings(provider)
