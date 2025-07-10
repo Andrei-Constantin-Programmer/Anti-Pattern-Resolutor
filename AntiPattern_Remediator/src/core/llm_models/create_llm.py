@@ -1,35 +1,32 @@
+from typing import Dict, Type
+from .base_provider import BaseLLMProvider
+from .ollama_provider import OllamaProvider
+from .ibm_provider import IBMProvider
+from .vllm_provider import VLLMProvider
+
 class LLMCreator:
+    _providers: Dict[str, Type[BaseLLMProvider]] = {
+        "ollama": OllamaProvider,
+        "ibm": IBMProvider,
+        "vllm": VLLMProvider,
+    }
+    
     @staticmethod
     def create_llm(provider: str, model_name: str, **kwargs):
-        if provider.lower() == "ollama":
-            return LLMCreator._create_ollama(model_name)
-        elif provider.lower() == "ibm":
-            return LLMCreator._create_ibm(model_name, **kwargs)
-        elif provider.lower() == "vllm":
-            return LLMCreator._create_vllm(model_name, **kwargs)
-        else:
+        provider_lower = provider.lower()
+        if provider_lower not in LLMCreator._providers:
             raise ValueError(f"Unsupported provider: {provider}")
+        provider_instance = LLMCreator._providers[provider_lower]()
+        return provider_instance.create_llm(model_name, **kwargs)
     
     @staticmethod
-    def _create_ollama(model_name: str):
-        from langchain_ollama import ChatOllama
-        return ChatOllama(model=model_name)
+    def create_embedding(provider: str, model_name: str, **kwargs):
+        provider_lower = provider.lower()
+        if provider_lower not in LLMCreator._providers:
+            raise ValueError(f"Unsupported provider: {provider}")
+        provider_instance = LLMCreator._providers[provider_lower]()
+        return provider_instance.create_embedding(model_name, **kwargs)
     
     @staticmethod
-    def _create_ibm(model_name: str, **kwargs):
-        from langchain_ibm import WatsonxLLM
-        from AntiPattern_Remediator.config.settings import settings
-        watsonx_llm = WatsonxLLM(
-            model_id=settings.LLM_MODEL,
-            url=settings.url,
-            project_id=settings.project_id,
-            params=settings.parameters,
-        )
-        return watsonx_llm
-    
-    @staticmethod
-    def _create_vllm(model_name: str, **kwargs):
-        try:
-            pass
-        except ImportError:
-            raise ImportError("")
+    def get_supported_providers() -> list:
+        return list(LLMCreator._providers.keys())

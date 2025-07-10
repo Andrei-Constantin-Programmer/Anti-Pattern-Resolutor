@@ -10,10 +10,14 @@ __author__ = "Legacy Code Migration Team"
 
 from .core import AgentState
 from .core.graph import CreateGraph
+from .core.llm_models import LLMCreator
+from .core.agents import AntipatternScanner 
 from .data import VectorDBManager
 
 __all__ = [
     "AgentState", 
     "CreateGraph",
     "VectorDBManager", 
+    "LLMCreator",
+    "AntipatternScanner"
 ]
