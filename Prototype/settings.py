@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from dataclasses import dataclass
 
 # Load .env from project root (one level above)
-load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
+load_dotenv()
 
 @dataclass
 class Settings:

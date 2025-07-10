@@ -17,6 +17,12 @@ app = FastAPI(
     version="1.0"
 )
 
+origins = [
+    "http://localhost:5173",  # your frontend dev server
+    "http://127.0.0.1:5173",
+]
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # You can restrict this to your frontend domain later
@@ -42,7 +48,7 @@ async def upload_file(file: UploadFile = File(...)):
     session_id = str(uuid.uuid4())
     session_store[session_id] = {"code": code}
 
-    return JSONResponse(content={"session_id": session_id})
+    return JSONResponse(content={"sucess":True,"session_id": session_id})
 
 
 @app.post("/analyze/")
@@ -64,6 +70,7 @@ async def analyze_code(req: SessionRequest):
 
 @app.post("/strategy/")
 async def strategy_suggestion(req: SessionRequest):
+    print("Received /strategy/ request with session_id:", req.session_id)
     session_id = req.session_id
     session = session_store.get(session_id)
 
