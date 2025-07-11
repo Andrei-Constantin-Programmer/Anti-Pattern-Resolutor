@@ -1,6 +1,6 @@
-from langchain_community.vectorstores import Chroma
-from langchain_ollama import OllamaEmbeddings
+from langchain_chroma import Chroma
 
+from src.core.llm_models.create_embedding import EmbeddingCreator
 from config.settings import settings
 
 class VectorDBManager:
@@ -9,12 +9,14 @@ class VectorDBManager:
     This class is responsible for managing the connection to the vector database.
     """
 
-    def __init__(self, persist_dir=None, embedding=None):
+    def __init__(self, persist_dir=None):
         # Initialize the database connection
         self.persist_dir = persist_dir or str(settings.VECTOR_DB_DIR)
-        embedding_model = embedding or settings.EMBEDDING_MODEL
         print(self.persist_dir)
-        self.embedding = OllamaEmbeddings(model=embedding_model)
+        self.embedding = EmbeddingCreator.create_embedding(
+            provider=settings.LLM_PROVIDER,
+            model_name=settings.EMBEDDING_MODEL
+        )
         self.db = Chroma(
             embedding_function=self.embedding,
             persist_directory=self.persist_dir

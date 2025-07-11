@@ -3,10 +3,10 @@ Enhanced workflow management using LangGraph
 """
 
 from langgraph.graph import StateGraph
-from langchain_community.chat_models import ChatOllama
 from langchain.tools.retriever import create_retriever_tool
 
 from config.settings import settings
+from ..llm_models import LLMCreator
 from ..state import AgentState
 from ..agents import AntipatternScanner
 
@@ -22,20 +22,30 @@ class CreateGraph:
         "Here is additional context from the codebase:\n"
         "{context}\n\n"
         "Your task is to:\n"
-        "- Carefully analyze the code.\n"
-        "- Identify any Java antipatterns or design smells present.\n"
-        "- For each antipattern you find, include:\n"
-        "  - [Name of the antipattern] (e.g., God Object, Long Method)\n"
-        "  - [File or class/method name involved] (if detectable)\n"
-        "  - [Brief description] of the issue\n"
-        "  - [Why it's a problem]\n"
-        "  - [Suggested refactor]\n"
-        "Be thorough but concise. If no antipatterns are found, say so."
+        "- Carefully analyze the code for Java antipatterns and design smells.\n"
+        "- Return your analysis in JSON format with the following structure:\n\n"
+        '{{\n'
+        '  "total_antipatterns_found": 0,\n'
+        '  "antipatterns_detected": [\n'
+        '    {{\n'
+        '      "name": "<antipattern name>",\n'
+        '      "location": "<class/method name/line number>",\n'
+        '      "description": "<brief description>",\n'
+        '      "problem_explanation": "<why it\'s a problem>",\n'
+        '      "suggested_refactor": "<refactoring suggestion>"\n'
+        '    }}\n'
+        '  ]\n'
+        '}}\n\n'
+        "Be thorough but concise. Ensure the JSON is valid and properly formatted. "
+        "If no antipatterns are found, set total_antipatterns_found to 0 and antipatterns_detected to an empty array."
     )
     
     def __init__(self, db_manager, llm_model=None):
         llm_model = llm_model or settings.LLM_MODEL
-        self.llm = ChatOllama(model=llm_model)
+        self.llm = LLMCreator.create_llm(
+            provider=settings.LLM_PROVIDER,
+            model_name=settings.LLM_MODEL
+         )
         self.db_manager = db_manager
         retriever = self.db_manager.as_retriever()
         retriever_tool = create_retriever_tool(
