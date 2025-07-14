@@ -8,7 +8,8 @@ import time
 from agents.antipattern_scanner import AntipatternScanner
 from agents.strategist_agent import StrategistAgent
 from agents.code_generator import CodeGenerator
-from utils.watsonx_client import WatsonXClient
+#from utils.watsonx_client import WatsonXClient
+from utils import OllamaModelClient
 
 
 
@@ -59,7 +60,7 @@ async def analyze_code(req: SessionRequest):
     if not session or "code" not in session:
         raise HTTPException(status_code=404, detail="Session or code not found")
 
-    model = WatsonXClient()
+    model = OllamaModelClient()
     scanner = AntipatternScanner(model)
 
     analysis = scanner.analyze(session["code"])
@@ -77,7 +78,7 @@ async def strategy_suggestion(req: SessionRequest):
     if not session or "code" not in session or "analysis" not in session:
         raise HTTPException(status_code=404, detail="Code or analysis not found in session")
 
-    model = WatsonXClient()
+    model = OllamaModelClient()
     strategist = StrategistAgent(model)
 
     strategy = strategist.suggest_refactorings(session["code"], session["analysis"])
@@ -94,7 +95,7 @@ async def generate_refactored_code(req: SessionRequest):
     if not session or "code" not in session or "strategy" not in session:
         raise HTTPException(status_code=404, detail="Missing code or strategy in session")
 
-    model = WatsonXClient()
+    model = OllamaModelClient()
     coder = CodeGenerator(model)
 
     refactored_code = coder.generate_refactored_code(session["code"], session["strategy"])

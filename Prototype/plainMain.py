@@ -1,85 +1,93 @@
-# Entry point for the prototype
-
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-import uuid
-import os
-import time
-
 from agents.antipattern_scanner import AntipatternScanner
-from agents.strategist_agent import StrategistAgent
 from agents.code_generator import CodeGenerator
-from utils.watsonx_client import WatsonXClient
+from agents.strategist_agent import StrategistAgent
+#from utils.watsonx_client import WatsonXClient
+from utils import OllamaModelClient
 
-# Temporary session storage
-SESSIONS = {}
+model = OllamaModelClient()
+
+code = """
+
+        public class GodClass {
+
+    public static int count = 0;
+    public static String status = "OK";
+    public static String globalConnection;
+
+    public static void main(String[] args) {
+        GodClass god = new GodClass();
+        god.doEverything();
+    }
+
+    public void doEverything() {
+        try {
+            System.out.println("Starting process...");
+            count = 5;
+
+            for (int i = 0; i < 100; i++) {
+                if (i % 5 == 0) {
+                    processThing(i, "Task" + i);
+                } else {
+                    System.out.println("Skipping task " + i);
+                }
+            }
+
+            // Copy-paste logic
+            if (count > 50) {
+                status = "TOO MUCH";
+                System.out.println("Status: " + status);
+            } else {
+                status = "ALL GOOD";
+                System.out.println("Status: " + status);
+            }
+
+            if (count > 50) {
+                status = "TOO MUCH";
+                System.out.println("Status: " + status);
+            } else {
+                status = "ALL GOOD";
+                System.out.println("Status: " + status);
+            }
+
+            connectToDB();
+            System.out.println("Process finished with status: " + status);
+
+        } catch (Exception e) {
+            // do nothing
+        }
+    }
+
+    public void processThing(int val, String name) {
+        System.out.println("Processing " + name + " with value " + val);
+        if (name.length() > 3) {
+            System.out.println(name.substring(0, 3).toUpperCase());
+        }
+
+        if (val == 42) {
+            System.out.println("The Answer.");
+        }
+
+        // Unused variable
+        String temp = "I exist for no reason";
+    }
+
+    public void connectToDB() {
+        globalConnection = "jdbc:mysql://localhost:3306/baddb?user=admin&password=admin";
+        System.out.println("Connected to DB using " + globalConnection);
+    }
+}
 
 
-# Input model for JSON body
-class SessionInput(BaseModel):
-    session_id: str
 
+        """
 
-app = FastAPI(
-    title="Antipattern Detection and Refactoring Strategy API",
-    version="1.0"
-)
+antipattern_scanner = AntipatternScanner(model)
+antiPatterns = antipattern_scanner.analyze(code)
 
+strategist = StrategistAgent(model)
+strategy = strategist.suggest_refactorings(code, antiPatterns)
 
-def parse_java_file(file: UploadFile) -> str:
-    if not file.filename.endswith(".java"):
-        raise HTTPException(status_code=400, detail="Only Java files are supported.")
-    contents = file.file.read()
-    return contents.decode("utf-8")
+coder = CodeGenerator(model)
+code = coder.generate_refactored_code(code, strategy)
 
-
-@app.post("/upload/")
-async def upload_code(file: UploadFile = File(...)):
-    code = parse_java_file(file)
-    session_id = str(uuid.uuid4())
-    SESSIONS[session_id] = {"code": code}
-    return {"session_id": session_id}
-
-
-@app.post("/analyze/")
-async def analyze_code(session: SessionInput):
-    session_id = session.session_id
-    if session_id not in SESSIONS:
-        raise HTTPException(status_code=404, detail="Invalid session ID.")
-
-    code = SESSIONS[session_id]["code"]
-    model = WatsonXClient()
-    scanner = AntipatternScanner(model)
-    analysis = scanner.analyze(code)
-    SESSIONS[session_id]["analysis"] = analysis
-    return JSONResponse(content={"antipattern_analysis": analysis})
-
-
-@app.post("/strategy/")
-async def strategy_suggestion(session: SessionInput):
-    session_id = session.session_id
-    if session_id not in SESSIONS or "analysis" not in SESSIONS[session_id]:
-        raise HTTPException(status_code=404, detail="Analysis not found for session.")
-
-    code = SESSIONS[session_id]["code"]
-    analysis = SESSIONS[session_id]["analysis"]
-    model = WatsonXClient()
-    strategist = StrategistAgent(model)
-    strategy = strategist.suggest_refactorings(code, analysis)
-    SESSIONS[session_id]["strategy"] = strategy
-    return JSONResponse(content={"refactoring_strategy": strategy})
-
-
-@app.post("/refactor/")
-async def refactor_code(session: SessionInput):
-    session_id = session.session_id
-    if session_id not in SESSIONS or "strategy" not in SESSIONS[session_id]:
-        raise HTTPException(status_code=404, detail="Strategy not found for session.")
-
-    code = SESSIONS[session_id]["code"]
-    strategy = SESSIONS[session_id]["strategy"]
-    model = WatsonXClient()
-    coder = CodeGenerator(model)
-    new_code = coder.generate_refactored_code(code, strategy)
-    return JSONResponse(content={"refactored_code": new_code})
+print(code)

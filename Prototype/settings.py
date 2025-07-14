@@ -17,6 +17,10 @@ class Settings:
     WATSONX_PROJECT_ID: str = os.getenv("WATSONX_PROJECT_ID", "")
     WATSONX_MODEL_ID: str = os.getenv("WATSONX_MODEL_ID", "ibm/granite-3-3-8b-instruct")
 
+     # Ollama-specific
+    OLLAMA_URL: str = os.getenv("OLLAMA_URL", "http://localhost:11434")  
+    OLLAMA_MODEL_ID: str = os.getenv("OLLAMA_MODEL_ID", "granite3.3:8b")
+
     # LLM inference settings
     MAX_NEW_TOKENS: int = 500
     TEMPERATURE: float = 0.1
