@@ -14,7 +14,7 @@ const UploadArea = ({setSessionId}) => {
   const removeFile = () => {
     setFile(null);
     if(inputRef.current) {
-      inputRef.current.value = null; // Clear the file input
+      inputRef.current.value = null;
     }
   };
 

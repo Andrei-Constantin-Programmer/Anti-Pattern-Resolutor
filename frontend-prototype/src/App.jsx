@@ -23,7 +23,7 @@ function App() {
 
           <div
             className={
-              "flex flex-col min-sm:flex-row gap-5 items-start justify-center min-h-[150px]"
+              "flex flex-col min-sm:flex-row gap-[40px] items-start justify-center min-h-[150px]"
             }
           >
             <AnalysisArea sessionId={sessionId}/>
