@@ -61,7 +61,7 @@ class Settings:
 
 
 # Provider settings mapping
-PROVIDER_SETTINGS: Dict = {}
+_PROVIDER_SETTINGS: Dict = {}
 
 def load_provider_settings():
     #Load provider settings from JSON file
