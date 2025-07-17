@@ -1,0 +1,19 @@
+{
+  "ollama": {
+    "LLM_MODEL": "granite3.3:8b",
+    "EMBEDDING_MODEL": "nomic-embed-text:latest"
+  },
+  "ibm": {
+    "LLM_MODEL": "ibm/granite-3-3-8b-instruct",
+    "EMBEDDING_MODEL": "nomic-embed-text:latest",
+    "parameters": {
+      "decoding_method": "sample",
+      "max_new_tokens": 4000,
+      "min_new_tokens": 1,
+      "temperature": 0.5,
+      "top_k": 50,
+      "top_p": 1
+    }
+  },
+  "vllm": {}
+}
