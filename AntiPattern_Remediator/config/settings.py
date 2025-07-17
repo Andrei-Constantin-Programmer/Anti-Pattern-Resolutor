@@ -85,7 +85,7 @@ def initialize_settings(provider: str = "ollama") -> Settings:
         EMBEDDING_MODEL=provider_config.get("EMBEDDING_MODEL", ""),
         parameters=provider_config.get("parameters")
     )
-    print(f"✅ Loaded settings for provider: {provider}")
+    print(f"Loaded settings for provider: {provider}")
     return settings
 
 
