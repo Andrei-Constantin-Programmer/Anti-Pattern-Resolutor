@@ -10,48 +10,38 @@ class AntipatternScanner:
         print("Analyzing Java code for antipatterns...")
 
         prompt = (
-            "You are an expert in software architecture. "
-            "Analyze the following Java code and identify common antipatterns. "
-            "For each antipattern, provide:\n"
-            "- Name of the antipattern\n"
-            "- Location (class/method)\n"
-            "- Brief description\n"
-            "- Why it's a problem\n"
-            "- Suggested refactoring strategy\n\n"
-            f"Java Code:\n{code}\n\n"
-            "Antipattern Report:"
+          "You are an expert and pragmatic software developer. "
+            "Analyze the provided Java code for significant software anti-patterns. "
+            "Consider the code's complexity; ignore trivial issues in simple applications.\n\n"
+            
+            "*** RESPONSE FORMATTING ***\n"
+            "You MUST format your response as a single JSON object. Do not include any text outside the JSON structure. "
+            "The JSON object must have two top-level keys: 'status' and 'antipatterns'.\n\n"
+
+            "1. If you find one or more significant anti-patterns:\n"
+            "- Set the 'status' to 'ISSUES_FOUND'.\n"
+            "- Populate the 'antipatterns' list with objects, each having these keys: 'name', 'location', 'description', 'severity'.\n"
+            "Example with issues:\n"
+            "{\n"
+            '  "status": "ISSUES_FOUND",\n'
+            '  "antipatterns": [\n'
+            '    { "name": "God Class", "location": "Main", "description": "...", "severity": "High" }\n'
+            '  ]\n'
+            "}\n\n"
+
+            "2. If you find no significant anti-patterns:\n"
+            "- Set the 'status' to 'NO_ISSUES_FOUND'.\n"
+            "- The 'antipatterns' list must be empty.\n"
+            "Example with no issues:\n"
+            "{\n"
+            '  "status": "NO_ISSUES_FOUND",\n'
+            '  "antipatterns": []\n'
+            "}\n\n"
+
+            f"Here is the Java code to analyze:\n```java\n{code}\n```\n\n"
+            "Respond only with the JSON output:"
         )
 
         response = self.model.invoke(prompt)
         print("Analysis complete.\n")
         return response
-
-if __name__ == "__main__":
-    from watsonx_client import WatsonXClient
-
-    sample_code = """
-    public class ApplicationManager {
-        private List<String> users = new ArrayList<>();
-        private List<String> logs = new ArrayList<>();
-
-        public void addUser(String user) {
-            users.add(user);
-            logs.add("User added: " + user);
-        }
-
-        public void removeUser(String user) {
-            users.remove(user);
-            logs.add("User removed: " + user);
-        }
-
-        public void printReport() {
-            System.out.println("Users: " + users);
-            System.out.println("Logs: " + logs);
-        }
-    }
-    """
-
-    model = WatsonXClient()
-    scanner = AntipatternScanner(model)
-    report = scanner.analyze(sample_code)
-    print(report)
