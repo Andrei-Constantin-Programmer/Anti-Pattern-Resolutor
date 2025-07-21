@@ -10,6 +10,7 @@ from ..llm_models import LLMCreator
 from ..state import AgentState
 from ..agents import AntipatternScanner
 from ..prompt import PromptManager
+from ..prompt.antipattern_prompts import ANTIPATTERN_SCANNER_KEY
 
 
 class CreateGraph:
@@ -29,7 +30,7 @@ class CreateGraph:
             name="retrieve_Java_antipatterns",
             description="Search for Java anti-patterns in the codebase",
         )
-        analysis_prompt = self.prompt_manager.get_prompt("antipattern_analysis")
+        analysis_prompt = self.prompt_manager.get_prompt(ANTIPATTERN_SCANNER_KEY)
          # Initialize agents
         self.agents = {
             'scanner': AntipatternScanner(retriever_tool, self.llm, analysis_prompt),

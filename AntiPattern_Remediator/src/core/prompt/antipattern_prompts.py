@@ -1,8 +1,8 @@
 """
-Prompt templates for antipattern analysis
+Prompt templates for antipattern Scanner
 """
-
-ANTIPATTERN_ANALYSIS_PROMPT = (
+ANTIPATTERN_SCANNER_KEY = "antipattern_scanner"
+ANTIPATTERN_SCANNER_PROMPT = (
     "You are a senior Java code reviewer with deep experience in detecting software design antipatterns. "
     "Below is the code to analyze:\n"
     "{code}\n\n"
