@@ -1,5 +1,5 @@
 """
-Prompt templates for antipattern Scanner
+Prompt templates for antipattern scanner
 """
 ANTIPATTERN_SCANNER_KEY = "antipattern_scanner"
 ANTIPATTERN_SCANNER_PROMPT = (
