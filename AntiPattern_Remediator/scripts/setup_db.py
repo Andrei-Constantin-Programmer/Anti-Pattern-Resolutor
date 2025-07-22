@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_core.documents import Document
 
 from config.settings import settings
@@ -63,11 +63,10 @@ embedding = EmbeddingCreator.create_embedding(
 persist_dir = str(settings.VECTOR_DB_DIR)
 if not os.path.exists(persist_dir):
     os.makedirs(persist_dir)
-vectordb = Chroma(
-    embedding_function=embedding,
+vectordb = Chroma.from_documents(
+    documents=all_docs,
+    embedding=embedding,
     persist_directory=persist_dir
 )
-vectordb.add_documents(all_docs)
-vectordb.persist()
 
 print("Successful! Chunk number: ", vectordb._collection.count())
