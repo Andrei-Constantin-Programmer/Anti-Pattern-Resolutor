@@ -11,7 +11,7 @@ build==1.2.2.post1
 cachetools==5.5.2
 certifi==2025.6.15
 charset-normalizer==3.4.2
-chromadb==1.0.13
+chromadb==1.0.15
 click==8.2.1
 coloredlogs==15.0.1
 dataclasses-json==0.6.7
@@ -43,7 +43,7 @@ jsonschema==4.24.0
 jsonschema-specifications==2025.4.1
 kubernetes==33.1.0
 langchain==0.3.26
-langchain-community==0.3.26
+langchain-community==0.3.27
 langchain-core==0.3.67
 langchain-ollama==0.3.3
 langchain_chroma==0.2.4
@@ -74,7 +74,7 @@ orjson==3.10.18
 ormsgpack==1.10.0
 overrides==7.7.0
 packaging==24.2
-posthog==6.0.1
+posthog==5.4.0
 propcache==0.3.2
 protobuf==5.29.5
 pyasn1==0.6.1
