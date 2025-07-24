@@ -11,7 +11,6 @@ class AntipatternScanner:
     def __init__(self, tool, model, prompt):
         self.prompt = prompt
         self.tool = tool
-        self.model = model  # Remove bind_tools call that's causing issues
         self.llm = model  # Add missing llm attribute
 
     def retrieve_context(self, state: AgentState):
@@ -37,18 +36,18 @@ class AntipatternScanner:
                 context=state.get('context', 'No context available')
             )
             response = self.llm.invoke(formatted_prompt)
-            state["answer"] = response.content if hasattr(response, 'content') else str(response)
+            state["antipatterns_scanner_results"] = response.content if hasattr(response, 'content') else str(response)
             print("   ✅ Analysis completed successfully")  
         except Exception as e:
             print(f"   ❌ Error during analysis: {e}")
-            state["answer"] = f"Error occurred during analysis: {e}"
+            state["antipatterns_scanner_results"] = f"Error occurred during analysis: {e}"
         return state
         
-    def display_results(self, state: AgentState): 
+    def display_antipatterns_results(self, state: AgentState): 
         """Display the final analysis results"""
         print("\n📋 ANTIPATTERN ANALYSIS RESULTS")
         print("=" * 60)
-        print(state.get("answer", "No analysis results available."))
+        print(state.get("antipatterns_scanner_results", "No analysis results available."))
         print("=" * 60)
         return state
     
