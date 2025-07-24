@@ -10,10 +10,6 @@ class Document:
         self.metadata = metadata or {}
 
 class TinyDBManager:
-    """
-    Manager for interacting with a TinyDB instance.
-    Designed to mirror VectorDBManager usage patterns.
-    """
     def __init__(self, db_path=None):
         # Default path to 'tinydb.json' at root of static directory
         self.db_path = db_path or os.path.join(str(settings.DATA_DIR), "tinydb.json")
@@ -60,7 +56,6 @@ class TinyDBManager:
         """Wipe the database clean."""
         self.db.truncate()
 
-    # NEW METHODS FOR RETRIEVAL FUNCTIONALITY
     def as_retriever(self):
         """Return self as retriever for LangChain compatibility"""
         return self
