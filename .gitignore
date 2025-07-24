@@ -37,6 +37,9 @@ data/vector_db/
 models/
 ollama_data/
 
+#TinyDB JSON
+tinydb.json
+
 # Secrets / environment variables
 .env
 .env.*

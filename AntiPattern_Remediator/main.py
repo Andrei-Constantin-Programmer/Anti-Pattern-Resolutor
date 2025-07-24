@@ -5,6 +5,7 @@ Main entry point - Legacy Code Migration Tool
 from src.core.graph import CreateGraph
 from src.data.database import VectorDBManager, TinyDBManager
 from config.settings import initialize_settings
+from scripts import seed_database
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -72,6 +73,8 @@ def main():
 
     #Setup Database
     if db_choice == "2":
+        print("Seeding TinyDB with AntiPattern Dataset")
+        seed_database.main()
         db_manager = TinyDBManager()
         print("Using TinyDB for knowledge retreival")
     else:
