@@ -1,0 +1,4 @@
+requests 
+html2text 
+python-dotenv
+keyring
