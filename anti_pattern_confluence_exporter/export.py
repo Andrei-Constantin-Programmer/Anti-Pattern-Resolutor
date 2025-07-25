@@ -9,6 +9,7 @@ from configuration import (
     set_output_dir,
     set_page_limit
 )
+from json_convertor import convert_markdown_directory
 
 def _set_config(args):
     if args.set_username:
@@ -26,6 +27,7 @@ def _set_config(args):
 
     print("Configuration updated via command line.")
 
+
 def _list_pages():
     from confluence_extractor import get_all_pages
 
@@ -34,6 +36,7 @@ def _list_pages():
     for pid, title in pages:
         print(f"{pid} - {title}")
     return
+
 
 def _extract_markdown(args):
     from confluence_extractor import download_page_as_markdown, MARKDOWN_DIRECTORY
@@ -54,6 +57,13 @@ def _extract_markdown(args):
             print(f"Downloaded {page_count} pages to the '{MARKDOWN_DIRECTORY}' directory.")
     else:
         print("No page IDs provided.")
+
+
+def _export_json(args):
+    print("Exporting Markdown files to JSON.")
+    convert_markdown_directory(args.default_metadata)
+    print("Export finalised.")
+
 
 def _whoami():
     from confluence_extractor import _get_auth_headers, settings
@@ -82,6 +92,11 @@ def main():
     parser.add_argument(
         "--folder-id",
         help="Export all pages under a parent page (like a folder), excluding the parent itself. Ignores --page-id."
+    )
+    parser.add_argument(
+        "--default-metadata",
+        action="store_true",
+        help="Leave anti-pattern metadata (category, programming language, severity) default."
     )
     parser.add_argument(
         "--list-pages",
@@ -116,6 +131,7 @@ def main():
         return
 
     _extract_markdown(args)
+    _export_json(args)
 
 
 if __name__ == "__main__":
