@@ -76,47 +76,52 @@ def _whoami():
         print(resp.text)
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Export Confluence pages to Markdown."
-    )
-    parser.add_argument(
+    parser = argparse.ArgumentParser(description="Export Confluence pages to JSON.")
+
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--config",
         action="store_true",
-        help="Override .env config via command-line and exit. Ignores non-config parameters."
+        help="Enter configuration mode: allows updating credentials and settings interactively via command-line."
     )
-    parser.add_argument(
+    mode.add_argument(
+        "--list-pages",
+        action="store_true",
+        help="List all pages in the configured Confluence space (title and ID)."
+    )
+    mode.add_argument(
+        "--whoami",
+        action="store_true",
+        help="Print the current authenticated Confluence user (for debugging)."
+    )
+    mode.add_argument(
         "-p", "--page-id",
         nargs="+",
-        help="One or more specific Confluence page IDs to export."
+        help="Export one or more specific Confluence page IDs."
     )
-    parser.add_argument(
+    mode.add_argument(
         "--folder-id",
-        help="Export all pages under a parent page (like a folder), excluding the parent itself. Ignores --page-id."
+        help="Export all child pages under a given parent page ID (excluding the parent itself)."
     )
+
     parser.add_argument(
         "--default-metadata",
         action="store_true",
-        help="Leave anti-pattern metadata (category, programming language, severity) default."
-    )
-    parser.add_argument(
-        "--list-pages",
-        action="store_true",
-        help="List all available pages with ID and title. Ignores --page-id and --folder-id."
-    )
-    parser.add_argument(
-        "--whoami", 
-        action="store_true", 
-        help="Print current Confluence user. Ignores all other parameters."
+        help="Skip metadata prompts when exporting to JSON. Uses default values."
     )
 
-    parser.add_argument("--set-username", help="Set and save your Confluence API username.")
-    parser.add_argument("--set-token", help="Set and save your Confluence API token.")
-    parser.add_argument("--set-base-url", help="Set and save the base Confluence URL.")
-    parser.add_argument("--set-space", help="Set and save the Confluence space key.")
-    parser.add_argument("--set-limit", help="Set and save the max number of pages to fetch.")
-    parser.add_argument("--set-output-dir", help="Set and save the output directory for downloaded files.")
+    config_group = parser.add_argument_group("Configuration Overrides (only valid with --config)")
+    config_group.add_argument("--set-username", help="Set your Confluence API username.")
+    config_group.add_argument("--set-token", help="Set your Confluence API token.")
+    config_group.add_argument("--set-base-url", help="Set the base URL for your Confluence site.")
+    config_group.add_argument("--set-space", help="Set the Confluence space key to operate within.")
+    config_group.add_argument("--set-limit", help="Set the maximum number of pages to fetch when listing.")
+    config_group.add_argument("--set-output-dir", help="Set the output directory for exported Markdown/JSON files.")
 
     args = parser.parse_args()
+
+    if args.default_metadata and not (args.folder_id or args.page_id):
+        parser.error("--default-metadata requires --folder-id or --page-id.")
 
     if args.whoami:
         _whoami()
@@ -130,8 +135,11 @@ def main():
         _list_pages()
         return
 
-    _extract_markdown(args)
-    _export_json(args)
+    if args.page_id or args.folder_id:
+        _extract_markdown(args)
+        _export_json(args)
+    else:
+        parser.print_help()
 
 
 if __name__ == "__main__":
