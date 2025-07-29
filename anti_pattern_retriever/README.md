@@ -6,6 +6,9 @@ This tool extracts anti-pattern documents from Confluence Cloud and converts the
 
 ## Installation
 
+### Requirements
+Python 3.13.0 (recommended)
+
 ### Clone the repository
 
 ```bash
