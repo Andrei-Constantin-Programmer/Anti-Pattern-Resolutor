@@ -44,11 +44,11 @@ def clone_repo(url: str, clone_root: str, post_pull_hook = None) -> None:
         _pull_to_local_clone(repo_name, target_path, post_pull_hook)
 
 
-def clone_repos_from_file(file_path: str, clone_root: str = DEFAULT_CLONE_DIRECTORY) -> None:
+def clone_repos_from_file(file_path: str, clone_root: str = DEFAULT_CLONE_DIRECTORY, post_pull_hook = None) -> None:
     os.makedirs(clone_root, exist_ok=True)
 
     with open(file_path, "r") as f:
         urls = [line.strip() for line in f if line.strip()]
 
     for url in urls:
-        clone_repo(url, clone_root)
+        clone_repo(url, clone_root, post_pull_hook)

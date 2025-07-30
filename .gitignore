@@ -53,3 +53,7 @@ config/.env
 # Optional: Docker
 Dockerfile.local
 docker-compose.override.yml
+
+# Intermediate files/output
+repos.txt
+clones/
