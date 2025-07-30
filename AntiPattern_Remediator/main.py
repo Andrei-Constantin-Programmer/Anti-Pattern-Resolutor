@@ -25,7 +25,7 @@ def main():
 
     # Initialize global settings with selected provider
     settings = initialize_settings(provider)
-    print(f"Using {settings.LLM_PROVIDER} with model {settings.LLM_MODEL}")
+    # print(f"Using {settings.LLM_PROVIDER} with model {settings.LLM_MODEL}")
 
     # Example Java code
     legacy_code = """
@@ -68,6 +68,9 @@ def main():
     initial_state = {
         "code": legacy_code,
         "context": None,
+        "antipatterns_scanner_results": None,
+        "refactoring_strategy_results": None,
+        "refactored_code": None,
         "answer": None
     }
 
@@ -85,10 +88,11 @@ def main():
     langgraph = CreateGraph(db_manager).workflow
     final_state = langgraph.invoke(initial_state)
 
-    print(f"\n🎉 Analysis Complete!")
-    print(f"📝 Final state keys: {list(final_state.keys())}")
-    print(f"📄 Context retrieved: {'Yes' if final_state.get('context') else 'No'}")
-    print(f"📋 Analysis completed: {'Yes' if final_state.get('answer') else 'No'}")
+    print(f"\nAnalysis Complete!")
+    print(f"Final state keys: {list(final_state.keys())}")
+    print(f"Context retrieved: {'Yes' if final_state.get('context') else 'No'}")
+    print(f"Analysis completed: {'Yes' if final_state.get('antipatterns_scanner_results') else 'No'}")
+    print(f"Refactored code: {'Yes' if final_state.get('refactored_code') else 'No'}")
 
 
 if __name__ == "__main__":

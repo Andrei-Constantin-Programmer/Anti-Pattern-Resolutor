@@ -1,6 +1,7 @@
 from typing import Dict
 from .antipattern_prompts import ANTIPATTERN_SCANNER_PROMPT, ANTIPATTERN_SCANNER_KEY
 from .refactoring_prompts import REFRACTOR_STRATEGIST_PROMPT, REFRACTOR_STRATEGIST_KEY
+from .code_transformer_prompt import CODE_TRANSFORMER_PROMPT, CODE_TRANSFORMER_KEY
 
 class PromptManager:
     def __init__(self):
@@ -11,6 +12,7 @@ class PromptManager:
         """Loads predefined prompts from the antipattern prompts module"""
         self._prompts[ANTIPATTERN_SCANNER_KEY] = ANTIPATTERN_SCANNER_PROMPT
         self._prompts[REFRACTOR_STRATEGIST_KEY] = REFRACTOR_STRATEGIST_PROMPT
+        self._prompts[CODE_TRANSFORMER_KEY] = CODE_TRANSFORMER_PROMPT
 
     def get_prompt(self, prompt_name: str) -> str:
         """Get a prompt template by name"""
