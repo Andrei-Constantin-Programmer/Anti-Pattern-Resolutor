@@ -71,5 +71,3 @@ def scan_repos(token: str, clone_root: str = "clones", force_scan: bool = False)
         if not repo_dir.is_dir():
             continue
         _scan_repo(repo_dir, token, force_scan)
-
-        
