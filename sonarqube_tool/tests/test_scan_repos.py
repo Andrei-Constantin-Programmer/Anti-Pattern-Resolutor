@@ -3,7 +3,6 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from sonarqube_tool.scan_repos import (
-    _scan_repo,
     scan_repos,
     SONARQUBE_FILE_NAME,
     PROPERTIES_FILE_NAME,
@@ -131,9 +130,9 @@ def test_scan_repos_runs_multiple_repos(tmp_path, mock_which, mock_subprocess_su
 def test_scan_repos_runs_mixed_state_repos(tmp_path, mock_which):
     # Arrange
     _ = mock_which
-    scanned = tmp_path / "repo1"
-    unscanned = tmp_path / "repo2"
-    failed = tmp_path / "repo3"
+    scanned = tmp_path / "scanned"
+    unscanned = tmp_path / "success"
+    failed = tmp_path / "failure"
 
     scanned.mkdir()
     unscanned.mkdir()
@@ -141,16 +140,21 @@ def test_scan_repos_runs_mixed_state_repos(tmp_path, mock_which):
 
     (scanned / SONARQUBE_FILE_NAME).write_text("already scanned")
 
-    with patch("sonarqube_tool.scan_repos.subprocess.run") as mock_run:
-        mock_run.side_effect = [
-            MagicMock(stdout="scan ok"),  # repo2
-            subprocess.CalledProcessError(1, "sonar-scanner", output="boom")  # repo3
-        ]
+    def mock_run_side_effect(*_, **kwargs):
+        cwd = kwargs.get("cwd")
+        if cwd.name == "success":
+            return MagicMock(stdout="scan ok")
+        elif cwd.name == "failure":
+            raise subprocess.CalledProcessError(1, "sonar-scanner", output="boom")
+        else:
+            raise AssertionError(f"Unexpected repo scanned: {cwd}")
+
+    with patch("sonarqube_tool.scan_repos.subprocess.run", side_effect=mock_run_side_effect):
 
         # Act
         scan_repos("dummy", str(tmp_path), force_scan=False)
 
-        # Assert
-        assert not (scanned / "sonar-project.properties").exists()
-        assert (unscanned / SONARQUBE_FILE_NAME).read_text() == "scan ok"
-        assert (failed / SONARQUBE_FILE_NAME).read_text() == "boom"
+    # Assert
+    assert not (scanned / "sonar-project.properties").exists()
+    assert (unscanned / SONARQUBE_FILE_NAME).read_text() == "scan ok"
+    assert (failed / SONARQUBE_FILE_NAME).read_text() == "boom"
