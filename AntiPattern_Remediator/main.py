@@ -25,7 +25,6 @@ def main():
 
     # Initialize global settings with selected provider
     settings = initialize_settings(provider)
-    # print(f"Using {settings.LLM_PROVIDER} with model {settings.LLM_MODEL}")
 
     # Example Java code
     legacy_code = """

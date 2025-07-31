@@ -15,8 +15,8 @@ class CodeTransformer:
         original_code = state.get("code")
         strategy = state.get("refactoring_strategy_results")
 
-        if not strategy or "Error occurred" in strategy:
-            print("No valid strategy provided. Skipping transformation.")
+        if not strategy:
+            print("No valid strategy received. Skipping transformation.")
             state["refactored_code"] = "Transformation skipped due to missing strategy."
             return state
 

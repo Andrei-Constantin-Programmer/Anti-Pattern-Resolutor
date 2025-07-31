@@ -1,15 +1,29 @@
+"""
+Prompt templates for antipattern scanner
+"""
 ANTIPATTERN_SCANNER_KEY = "antipattern_scanner"
 ANTIPATTERN_SCANNER_PROMPT = (
-    "You are an expert Java code analyst. Your task is to analyze the provided Java code and identify anti-patterns based on the context.\n\n"
-    "## Context: Anti-Pattern Definitions\n"
+    "You are a senior Java software engineer and expert code reviewer, specializing in identifying software design antipatterns. "
+    "You have extensive knowledge of common Java-related antipatterns"
+    "Below is the code to analyze:\n"
+    "```{code}```\n\n"
+    "Here is additional context from the codebase:\n"
     "{context}\n\n"
-    "## Java Code to Analyze\n"
-    "```java\n{code}\n```\n\n"
-    "## Instructions\n"
-    "1. Analyze the code and identify all applicable anti-patterns from the context.\n"
-    "2. Your entire response MUST be a single, valid JSON object.\n"
-    "3. The JSON object must contain one key: `antipatterns_detected`.\n"
-    "4. The value of `antipatterns_detected` must be an array of objects.\n"
-    "5. Each object in the array must have three keys: `name`, `location`, and `description`.\n"
-    "6. Do not add any text or explanation before or after the JSON object."
+    "Your task is to:\n"
+    "- Carefully analyze the code for Java antipatterns and design smells.\n"
+    "- Base your analysis strictly on the antipattern definitions provided earlier in this conversation. Do not invent new antipatterns.\n"
+    "- Make sure your results are clear and actionable, so others can know how to address the identified issues.\n"
+    "- Return your analysis in JSON format with the following structure:\n\n"
+    '{{\n'
+    '  "total_antipatterns_found": 0,\n'
+    '  "antipatterns_detected": [\n'
+    '    {{\n'
+    '      "name": "<antipattern name>",\n'
+    '      "location": "<class/method name/line number>",\n'
+    '      "description": "<comprehensive description>",\n'
+    '    }}\n'
+    '  ]\n'
+    '}}\n\n'
+    "Be thorough but concise. Ensure the JSON is valid and properly formatted. "
+    "If no antipatterns are found, set total_antipatterns_found to 0 and antipatterns_detected to an empty array."
 )
