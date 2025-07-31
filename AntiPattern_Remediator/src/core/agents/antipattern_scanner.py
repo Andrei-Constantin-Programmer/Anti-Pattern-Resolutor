@@ -21,9 +21,9 @@ class AntipatternScanner:
             # Use retriever_tool to get relevant context
             context = self.tool.invoke({"query": search_query})
             state["context"] = context
-            print(f"   ✅ Successfully retrieved relevant context")
+            print(f"Successfully retrieved relevant context")
         except Exception as e:
-            print(f"   ❌ Error retrieving context: {e}")
+            print(f"Error retrieving context: {e}")
             state["context"] = "No additional context available due to retrieval error."
         return state
 
@@ -37,15 +37,15 @@ class AntipatternScanner:
             )
             response = self.llm.invoke(formatted_prompt)
             state["antipatterns_scanner_results"] = response.content if hasattr(response, 'content') else str(response)
-            print("   ✅ Analysis completed successfully")  
+            print("Analysis completed successfully")  
         except Exception as e:
-            print(f"   ❌ Error during analysis: {e}")
+            print(f"Error during analysis: {e}")
             state["antipatterns_scanner_results"] = f"Error occurred during analysis: {e}"
         return state
         
     def display_antipatterns_results(self, state: AgentState): 
         """Display the final analysis results"""
-        print("\n📋 ANTIPATTERN ANALYSIS RESULTS")
+        print("\nANTIPATTERN ANALYSIS RESULTS")
         print("=" * 60)
         print(state.get("antipatterns_scanner_results", "No analysis results available."))
         print("=" * 60)
