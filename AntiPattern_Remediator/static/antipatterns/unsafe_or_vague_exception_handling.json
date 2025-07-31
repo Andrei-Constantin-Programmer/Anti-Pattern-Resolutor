@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Unsafe or Vague Exception Handling",
+    "description": "Reliable exception handling, type safety, and controlled flow are essential forr writing maintainable and robust software. Unsafe or Vague exception handling often results in code that is fragile, difficult to test, and challenging to debug. Instead of providing meaningful error handling or clear separation of concerns, these implementations either hide the underlying problem or use language features in a way that breaks maintainability.",
+    "category": "Uncategorised",
+    "language": "Any",
+    "severity": "MEDIUM",
+    "problem": "Hidden failures : Catching exceptions without logging or meaningful handling hides the source of issues and makes debugging difficult\nPoor diagnosis : Broad exception handling with vague error messages hides intent and makes it harder to trace the root cause\nInconsistent runtime behaviour : using assertions for control logic can lead to unpredictable behaviour depending on the JVM configuration\nUncontrolled termination : Using system.exit() directly in application logic makes code untestable and prevents proper resource cleanup",
+    "remediation": "Replace assertions with proper condition checks and informative exceptions to ensure consistent behaviour across environments\nAvoid silent catch blocks, log exceptions or rethrow them to preserve error context\nHandle specific exception types instead of catching broad categories like Exception or RuntimeException\nRefactor abrupt shutdown calls into controlled exits using exception handling or return code to support recovery",
+    "limitation": ""
+  }
+]

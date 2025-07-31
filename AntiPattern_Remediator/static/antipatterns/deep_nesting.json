@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Deep Nesting",
+    "description": "Deep Nesting occurs when conditional or loop blocks are embedded within one another across multiple levels, creating code with high indentation and complex control flow. While not always increasing cyclomatic complexity linearly, deep nesting significantly raises cognitive complexity (the mental effort required to understand, modify, and debug a method).",
+    "category": "Uncategorised",
+    "language": "Any",
+    "severity": "MEDIUM",
+    "problem": "Low readability : The \"arrowhead\" structure makes it hard to trace logic and understand the intended flow.\nHigh cognitive load : Developers must mentally track the conditions that lead to or prevent reaching a particular line of code.\nError-prone maintenance : Adding or modifying logic inside deeply nested blocks increases the risk of missing cases or introducing bugs.\nInhibited reuse and testing : Deep nesting often combines concerns that should be split into smaller, testable methods or units.\nPoor diffs in version control : Even small changes can alter indentation across many lines, making reviews harder.",
+    "remediation": "Guard clauses (early return) : Exit early when preconditions fail, flattening the control flow\nExtract method : Isolate deeply nested blocks into private methods with clear names to separate concerns and reduce depth.\nInvet conditionals : Invert logic to return early or skip unnecessary branches.\nReplace nested loops with streams (Java-specific): Abstract common filtering or mapping logic into declarative operations.\nUse pattern matching : Replace layered `if` chains with clearer structural or type-based matching.\nEncapsulate state checks : Group multiple conditionals into intention-revealing boolean helpers or state objects.",
+    "limitation": "Can conflict with existing code style : Teams unfamiliar with guard clauses may resist early exits or multiple returns.\nRefactoring can obscure logic during transition : Extracted methods must be clearly named to preserve readability and avoid confusion.\nNested logic may be unavoidable in rare edge cases : Complex parsing, state machines, or embedded domain-specific languages may naturally involve deeper control structures."
+  }
+]

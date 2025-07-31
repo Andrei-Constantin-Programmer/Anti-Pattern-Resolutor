@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Magic Constants",
+    "description": "Magic constants (or magic numbers) are hard-coded literal values (e.g., 3.14, 42, \"admin\") that appear directly in code without context or explanation. These values become problematic when their purpose is unclear, undocumented, or reused inconsistently. While some literals (like 0, 1, or -1) may be self-explanatory in some contexts, others represent thresholds, identifiers, or rules that should be named and documented for clarity.",
+    "category": "Uncategorised",
+    "language": "Any",
+    "severity": "MEDIUM",
+    "problem": "Poor readability : Developers must guess the meaning of the value, increasing cognitive load.\nLow maintainability : Changing the value requires updating it everywhere, risking inconsistent updates.\nHarder debugging : Literal values lack descriptive meaning in stack traces, logs, or debuggers.\nDuplication : The same literal used in multiple places leads to repeated logic and tighter coupling.\nViolation of DRY : Embeds implicit meaning multiple times without abstraction.",
+    "remediation": "Define Constants - Move literal values into named constants (e.g., const, final, or static readonly).\nUse Enums - Group related constants (e.g., roles, statuses) as enumerations with meaningful names.",
+    "limitation": "Extracting trivial values like 0 or 1 may clutter code and reduce clarity if overdone.\nIn performance-critical code, indirection through constants or functions may introduce slight overhead.\nOver-abstracting unnamed constants (e.g., MAXCOUNT3) may make code harder to understand.\nIf a value is used only once and is self-explanatory, extracting it may be unnecessary overhead."
+  }
+]
