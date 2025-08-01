@@ -13,11 +13,17 @@ class RefactorStrategist:
         print("Strategizing refactoring options...")
         try:
             prompt_template = self.prompt_manager.get_prompt(self.prompt_manager.REFACTOR_STRATEGIST)
-            formatted_prompt = prompt_template.format(
+            
+            # Get historical messages from state, or use empty list if none exist
+            msgs = state.get('msgs', [])
+
+            formatted_messages = prompt_template.format_messages(
                 code=state['code'],
-                context=state['antipatterns_scanner_results']
-            ) 
-            response = self.llm.invoke(formatted_prompt)
+                context=state['antipatterns_scanner_results'],
+                msgs=msgs
+            )
+            
+            response = self.llm.invoke(formatted_messages)
             state["refactoring_strategy_results"] = response.content if hasattr(response, 'content') else str(response)
             print("Refactoring strategy created successfully")  
         except Exception as e:

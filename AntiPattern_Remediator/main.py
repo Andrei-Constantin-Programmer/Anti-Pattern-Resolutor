@@ -30,7 +30,6 @@ def main():
     # Initialize PromptManager
     print("Initializing PromptManager...")
     prompt_manager = PromptManager()
-    print(f"Available prompts: {prompt_manager.list_available_prompts()}")
 
     # Example Java code
     legacy_code = """

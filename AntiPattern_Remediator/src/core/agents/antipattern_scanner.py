@@ -32,11 +32,17 @@ class AntipatternScanner:
         print("Analyzing code for antipatterns...")
         try:
             prompt_template = self.prompt_manager.get_prompt(self.prompt_manager.ANTIPATTERN_SCANNER)
-            formatted_prompt = prompt_template.format(
+            
+            # Get historical messages from state, or use empty list if none exist
+            msgs = state.get('msgs', [])
+
+            formatted_messages = prompt_template.format_messages(
                 code=state['code'],
                 context=state['context'],
+                msgs=msgs
             )
-            response = self.llm.invoke(formatted_prompt)
+            
+            response = self.llm.invoke(formatted_messages)
             state["antipatterns_scanner_results"] = response.content if hasattr(response, 'content') else str(response)
             print("Analysis completed successfully")  
         except Exception as e:

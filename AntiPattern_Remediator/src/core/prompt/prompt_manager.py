@@ -33,6 +33,7 @@ class PromptManager:
                 self._load_prompt_from_yaml(filename, prompt_key)
             
             print(f"Successfully loaded {len(self._prompt_cache)} prompts")
+            print("=" * 60)
         except Exception as e:
             print(f"Error loading prompts: {e}")
     
