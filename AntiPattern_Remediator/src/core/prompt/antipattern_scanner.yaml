@@ -34,16 +34,16 @@ antipattern_scanner:
     
     Response Format:
     ```json
-    {
+    {{
       "total_antipatterns_found": 0,
       "antipatterns_detected": [
-        {
+        {{
           "name": "<antipattern name>",
           "location": "<class/method name/line number>",
           "description": "<comprehensive description of the issue>",
-        }
+        }}
       ]
-    }
+    }}
     ```
     
     Be thorough but concise. Ensure the JSON is valid and properly formatted.
