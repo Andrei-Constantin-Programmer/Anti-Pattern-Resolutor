@@ -3,15 +3,16 @@ Antipattern scanner agent for detecting code smells and antipatterns
 """
 
 from ..state import AgentState
+from ..prompt import PromptManager
 
 
 class AntipatternScanner:
     """Antipattern scanner agent"""
     
-    def __init__(self, tool, model, prompt):
-        self.prompt = prompt
+    def __init__(self, tool, model, prompt_manager: PromptManager):
+        self.prompt_manager = prompt_manager
         self.tool = tool
-        self.llm = model  # Add missing llm attribute
+        self.llm = model
 
     def retrieve_context(self, state: AgentState):
         print("Retrieving context from knowledge base...")
@@ -30,10 +31,10 @@ class AntipatternScanner:
     def analyze_antipatterns(self, state: AgentState):
         print("Analyzing code for antipatterns...")
         try:
-            # Format the prompt with code and context
-            formatted_prompt = self.prompt.format(
-                code=state.get('code', ''),
-                context=state.get('context', 'No context available')
+            prompt_template = self.prompt_manager.get_prompt(self.prompt_manager.ANTIPATTERN_SCANNER)
+            formatted_prompt = prompt_template.format(
+                code=state['code'],
+                context=state['context'],
             )
             response = self.llm.invoke(formatted_prompt)
             state["antipatterns_scanner_results"] = response.content if hasattr(response, 'content') else str(response)

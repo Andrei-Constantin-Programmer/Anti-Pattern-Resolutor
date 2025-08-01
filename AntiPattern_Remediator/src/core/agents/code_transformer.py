@@ -2,13 +2,15 @@
 Agent responsible for refactoring code based on analysis.
 """
 from ..state import AgentState
+from ..prompt import PromptManager
+
 
 class CodeTransformer:
     """Code Transformer Agent"""
 
-    def __init__(self, model, prompt: str):
+    def __init__(self, model, prompt_manager: PromptManager):
         self.llm = model
-        self.prompt = prompt
+        self.prompt_manager = prompt_manager
 
     def transform_code(self, state: AgentState) -> AgentState:
         print("--- TRANSFORMING CODE ---")
@@ -23,7 +25,8 @@ class CodeTransformer:
         print("Strategy received, proceeding with transformation.")
 
         try:
-            formatted_prompt = self.prompt.format(
+            prompt_template = self.prompt_manager.get_prompt(self.prompt_manager.CODE_TRANSFORMER)
+            formatted_prompt = prompt_template.format(
                 strategy=strategy,
                 code=original_code
             )

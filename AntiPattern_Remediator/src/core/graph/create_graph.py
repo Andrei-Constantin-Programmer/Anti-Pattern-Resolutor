@@ -12,36 +12,30 @@ from ..agents import AntipatternScanner
 from ..agents import RefactorStrategist
 from ..agents import CodeTransformer
 from ..prompt import PromptManager
-from ..prompt.antipattern_prompts import ANTIPATTERN_SCANNER_KEY
-from ..prompt.refactoring_prompts import REFRACTOR_STRATEGIST_KEY
-from ..prompt.code_transformer_prompt import CODE_TRANSFORMER_KEY
+
 
 class CreateGraph:
     """Graph"""
     
-    def __init__(self, db_manager, llm_model=None):
+    def __init__(self, db_manager, prompt_manager, llm_model=None):
         llm_model = llm_model or settings.LLM_MODEL
         self.llm = LLMCreator.create_llm(
             provider=settings.LLM_PROVIDER,
             model_name=settings.LLM_MODEL
          )
         self.db_manager = db_manager
-        self.prompt_manager = PromptManager()
+        self.prompt_manager = prompt_manager
         retriever = self.db_manager.as_retriever()
         retriever_tool = create_retriever_tool(
             retriever,
             name="retrieve_Java_antipatterns",
             description="Search for Java anti-patterns in the codebase",
         )
-        analysis_prompt = self.prompt_manager.get_prompt(ANTIPATTERN_SCANNER_KEY)
-        refactoring_prompt = self.prompt_manager.get_prompt(REFRACTOR_STRATEGIST_KEY)
-        code_transformer_prompt = self.prompt_manager.get_prompt(CODE_TRANSFORMER_KEY)
 
-         # Initialize agents
         self.agents = {
-            'scanner': AntipatternScanner(retriever_tool, self.llm, analysis_prompt),
-            'strategist': RefactorStrategist(self.llm, refactoring_prompt),
-            'transformer': CodeTransformer(self.llm, code_transformer_prompt)
+            'scanner': AntipatternScanner(retriever_tool, self.llm, self.prompt_manager),
+            'strategist': RefactorStrategist(self.llm, self.prompt_manager),
+            'transformer': CodeTransformer(self.llm, self.prompt_manager)
         }
         self.workflow = self._build_graph()
     
