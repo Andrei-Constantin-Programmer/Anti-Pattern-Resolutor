@@ -12,6 +12,11 @@ from ..agents import AntipatternScanner
 from ..prompt import PromptManager
 from ..prompt.antipattern_prompts import ANTIPATTERN_SCANNER_KEY
 
+# Imports for LangSmith tracing
+import os
+from langsmith import Client
+from langchain.callbacks.tracers import LangChainTracer
+
 
 class CreateGraph:
     """Graph"""
@@ -22,6 +27,24 @@ class CreateGraph:
             provider=settings.LLM_PROVIDER,
             model_name=settings.LLM_MODEL
          )
+                
+        # LangSmith integration
+        if settings.LLM_PROVIDER in ["ollama", "vllm"] and settings.LANGSMITH_ENABLED:
+            os.environ["LANGCHAIN_TRACING_V2"] = "true"
+            client = Client(
+                api_url=settings.LANGSMITH_ENDPOINT,
+                api_key=settings.LANGSMITH_API_KEY,
+            )
+            tracer = LangChainTracer(
+                project_name=settings.LANGSMITH_PROJECT,
+                client=client
+            )
+
+            self.llm.callbacks = [tracer]
+            
+            print(f"LangSmith tracing enabled for project: {settings.LANGSMITH_PROJECT} | provider - {settings.LLM_PROVIDER}")
+
+
         self.db_manager = db_manager
         self.prompt_manager = PromptManager()
         retriever = self.db_manager.as_retriever()

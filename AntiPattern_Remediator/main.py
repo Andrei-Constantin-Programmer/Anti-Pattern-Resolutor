@@ -2,8 +2,6 @@
 """
 Main entry point - Legacy Code Migration Tool
 """
-from src.core.graph import CreateGraph
-from src.data.database import VectorDBManager
 from config.settings import initialize_settings
 from dotenv import load_dotenv
 load_dotenv()
@@ -21,6 +19,10 @@ def main():
     # Initialize global settings with selected provider
     settings = initialize_settings(provider)
     print(f"Using {settings.LLM_PROVIDER} with model {settings.LLM_MODEL}")
+
+    # Temporary Lazy imports
+    from src.core.graph import CreateGraph
+    from src.data.database import VectorDBManager
     
     # Example Java code
     legacy_code = """
