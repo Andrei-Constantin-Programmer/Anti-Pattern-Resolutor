@@ -26,6 +26,17 @@ source venv/bin/activate # Windows: .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
+### (Linux) Keyring
+If you don't have a keyring on your machine, e.g,:
+```bash
+keyring.errors.NoKeyringError: No recommended backend was available.
+```
+
+Set the keyring environment variable
+```bash
+echo 'export PYTHON_KEYRING_BACKEND=keyrings.alt.file.PlaintextKeyring' >> venv/bin/activate
+```
+
 ## Initial configuration
 Run the following command once to store your API credentials and other settings:
 

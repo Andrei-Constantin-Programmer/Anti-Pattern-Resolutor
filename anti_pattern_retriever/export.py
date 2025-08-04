@@ -1,7 +1,6 @@
 import requests
 
 from setup_cli_parameters import setup_cli_argument_parser
-from json_convertor import convert_markdown_directory
 
 from configuration import (
     set_api_username,
@@ -66,6 +65,7 @@ def _extract_markdown(args):
 
 # Exports the downloaded Markdown files as JSON files
 def _export_json(args):
+    from json_convertor import convert_markdown_directory
     print("Exporting Markdown files to JSON.")
     convert_markdown_directory(args.default_metadata)
     print("Export finalised.")
