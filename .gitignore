@@ -57,3 +57,6 @@ docker-compose.override.yml
 # Intermediate files/output
 repos.txt
 clones/
+
+# Binary files
+*.bin
