@@ -1,5 +1,5 @@
 import yaml
-from pathlib import Path
+from config.settings import settings
 from typing import Optional
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 
@@ -12,7 +12,7 @@ class PromptManager:
         self.REFACTOR_STRATEGIST = "refactor_strategist" 
         self.CODE_TRANSFORMER = "code_transformer"
 
-        self.prompt_directory = Path(__file__).parent
+        self.prompt_directory = settings.PROMPT_DIR
         # Initialize storage for prompt templates
         self._prompt_cache = {}
         # Load prompts on initialization

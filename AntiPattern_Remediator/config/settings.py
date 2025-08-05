@@ -23,6 +23,7 @@ class Settings:
     # Paths
     BASE_DIR: Path = Path(__file__).resolve().parent.parent
     DATA_DIR: Path = BASE_DIR / "static"
+    PROMPT_DIR: Path = DATA_DIR / "prompt"
     VECTOR_DB_DIR: Path = DATA_DIR / "vector_db"
 
     # LLM configuration (defaults)
@@ -56,6 +57,7 @@ class Settings:
             self.url = os.getenv("WATSONX_URL", self.url)
 
         self.DATA_DIR.mkdir(exist_ok=True)
+        self.PROMPT_DIR.mkdir(parents=True, exist_ok=True)
         self.VECTOR_DB_DIR.mkdir(parents=True, exist_ok=True)
 
 
