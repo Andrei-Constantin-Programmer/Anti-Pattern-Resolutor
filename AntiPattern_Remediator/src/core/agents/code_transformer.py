@@ -2,6 +2,8 @@
 Agent responsible for refactoring code based on analysis.
 """
 from ..state import AgentState
+from colorama import Fore, Style
+
 
 class CodeTransformer:
     """Code Transformer Agent"""
@@ -30,12 +32,12 @@ class CodeTransformer:
             
             response = self.llm.invoke(formatted_prompt)
             refactored_code = response.content.strip()
-            
-            print("Code transformation complete.")
+
+            print(Fore.GREEN + "Code transformation complete." + Style.RESET_ALL)
             state["refactored_code"] = refactored_code
             
         except Exception as e:
-            print(f"Error during code transformation: {e}")
+            print(Fore.RED + f"Error during code transformation: {e}" + Style.RESET_ALL)
             state["refactored_code"] = f"Error during transformation: {e}"
             
         return state
