@@ -3,6 +3,7 @@
 Main entry point - Legacy Code Migration Tool
 """
 from src.core.graph import CreateGraph
+from src.core.prompt import PromptManager
 from src.data.database import VectorDBManager, TinyDBManager
 from config.settings import initialize_settings
 from scripts import seed_database
@@ -25,6 +26,10 @@ def main():
 
     # Initialize global settings with selected provider
     settings = initialize_settings(provider)
+
+    # Initialize PromptManager
+    print("Initializing PromptManager...")
+    prompt_manager = PromptManager()
 
     # Example Java code
     legacy_code = """
@@ -84,7 +89,7 @@ def main():
         db_manager = vector_db.get_db()
         print("Using ChromaDB for knowledge retreival")
 
-    langgraph = CreateGraph(db_manager).workflow
+    langgraph = CreateGraph(db_manager, prompt_manager).workflow
     final_state = langgraph.invoke(initial_state)
 
     print(f"\nAnalysis Complete!")

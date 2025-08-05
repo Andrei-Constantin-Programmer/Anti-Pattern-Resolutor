@@ -1,22 +1,29 @@
 from ..state import AgentState
+from ..prompt import PromptManager
 
 
 class RefactorStrategist:
     """Refactor strategist agent for managing code refactoring tasks"""
     
-    def __init__(self, model, prompt):
-        self.prompt = prompt
-        self.llm = model  # Add missing llm attribute
+    def __init__(self, model, prompt_manager: PromptManager):
+        self.prompt_manager = prompt_manager
+        self.llm = model
 
     def strategize_refactoring(self, state: AgentState):
         print("Strategizing refactoring options...")
         try:
-            # Format the prompt with code and context
-            formatted_prompt = self.prompt.format(
-                code=state.get('code', ''),
-                context=state.get('antipatterns_scanner_results', 'No antipatterns found')
+            prompt_template = self.prompt_manager.get_prompt(self.prompt_manager.REFACTOR_STRATEGIST)
+            
+            # Get historical messages from state, or use empty list if none exist
+            msgs = state.get('msgs', [])
+
+            formatted_messages = prompt_template.format_messages(
+                code=state['code'],
+                context=state['antipatterns_scanner_results'],
+                msgs=msgs
             )
-            response = self.llm.invoke(formatted_prompt)
+            
+            response = self.llm.invoke(formatted_messages)
             state["refactoring_strategy_results"] = response.content if hasattr(response, 'content') else str(response)
             print("Refactoring strategy created successfully")  
         except Exception as e:

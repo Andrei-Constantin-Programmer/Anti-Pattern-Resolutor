@@ -1,25 +1,72 @@
-from typing import Dict
-from .antipattern_prompts import ANTIPATTERN_SCANNER_PROMPT, ANTIPATTERN_SCANNER_KEY
-from .refactoring_prompts import REFRACTOR_STRATEGIST_PROMPT, REFRACTOR_STRATEGIST_KEY
-from .code_transformer_prompt import CODE_TRANSFORMER_PROMPT, CODE_TRANSFORMER_KEY
+import yaml
+from config.settings import settings
+from typing import Optional
+from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
+
 
 class PromptManager:
+    """Manager for handling prompt templates and configurations."""
     def __init__(self):
-        self._prompts: Dict[str, str] = {}  # Dictionary to hold prompt templates
-        self._load_prompts()
-    
-    def _load_prompts(self):
-        """Loads predefined prompts from the antipattern prompts module"""
-        self._prompts[ANTIPATTERN_SCANNER_KEY] = ANTIPATTERN_SCANNER_PROMPT
-        self._prompts[REFRACTOR_STRATEGIST_KEY] = REFRACTOR_STRATEGIST_PROMPT
-        self._prompts[CODE_TRANSFORMER_KEY] = CODE_TRANSFORMER_PROMPT
+        # Prompt key constants, **same as YAML filenames**
+        self.ANTIPATTERN_SCANNER = "antipattern_scanner"
+        self.REFACTOR_STRATEGIST = "refactor_strategist" 
+        self.CODE_TRANSFORMER = "code_transformer"
 
-    def get_prompt(self, prompt_name: str) -> str:
-        """Get a prompt template by name"""
-        if prompt_name not in self._prompts:
-            raise ValueError(f"Undefined prompt: {prompt_name}")
-        return self._prompts[prompt_name]
+        self.prompt_directory = settings.PROMPT_DIR
+        # Initialize storage for prompt templates
+        self._prompt_cache = {}
+        # Load prompts on initialization
+        self._load_all_prompts()
     
-    def list_prompts(self) -> Dict[str, str]:
-        """List all available prompts"""
-        return self._prompts.copy()
+    def _load_all_prompts(self) -> None:
+        """Load all prompt configurations from YAML files."""
+        try:
+            # Get all prompt constants and load corresponding files
+            prompt_constants = [
+                self.ANTIPATTERN_SCANNER,
+                self.REFACTOR_STRATEGIST,
+                self.CODE_TRANSFORMER,
+            ]
+            
+            for prompt_key in prompt_constants:
+                filename = f"{prompt_key}.yaml"
+                self._load_prompt_from_yaml(filename, prompt_key)
+            
+            print(f"Successfully loaded {len(self._prompt_cache)} prompts")
+            print("=" * 60)
+        except Exception as e:
+            print(f"Error loading prompts: {e}")
+    
+    def _load_prompt_from_yaml(self, filename: str, prompt_key: str) -> None:
+        """Load a prompt configuration from a YAML file."""
+        yaml_path = self.prompt_directory / filename
+        
+        if not yaml_path.exists():
+            print(f"Warning: Prompt file {yaml_path} not found")
+            return
+        
+        try:
+            with open(yaml_path, 'r', encoding='utf-8') as file:
+                config = yaml.safe_load(file)
+            if prompt_key not in config:
+                print(f"Warning: Section '{prompt_key}' not found in {filename}")
+                return
+            
+            prompt_config = config[prompt_key]
+            # Create ChatPromptTemplate
+            self._prompt_cache[prompt_key] = ChatPromptTemplate([
+                ("system", prompt_config.get('system', '')),
+                ("user", prompt_config.get('user', '')),
+                MessagesPlaceholder("msgs")
+            ])
+            print(f"Loaded prompt '{prompt_key}' from {filename}")
+            
+        except Exception as e:
+            print(f"Error loading prompt from {filename}: {e}")
+    
+    def get_prompt(self, prompt_key: str) -> Optional[ChatPromptTemplate]:
+        if prompt_key not in self._prompt_cache:
+            print(f"Warning: Prompt '{prompt_key}' not found in cache")
+            return None
+        
+        return self._prompt_cache[prompt_key]

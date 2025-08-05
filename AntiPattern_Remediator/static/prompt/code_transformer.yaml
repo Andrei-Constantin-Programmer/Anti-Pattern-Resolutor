@@ -1,0 +1,41 @@
+# Code Transformation Prompts
+# Contains prompts for applying refactoring strategies and transforming code
+
+code_transformer:
+  variables:
+    - strategy
+    - code
+  
+  description: "Transforms Java code by applying refactoring strategies, producing clean, compilable code"
+  version: "1.0"
+  
+  system: |
+    You are an expert Java programmer responsible for refactoring code based on a provided strategy.
+    You will be given the original code and a JSON object containing a list of refactoring strategies.
+    Your task is to apply all these strategies to produce a single, fully refactored version of the code.
+
+  user: |
+    **IMPORTANT CONTEXT:**
+    The refactoring strategy may refer to classes or methods (e.g., 'MavenExecutionEngine') that are NOT in the 'Original Java Code' block.
+    In this situation, you MUST apply the *principle* of the strategy to the code that IS provided.
+    For example, if the strategy says to break up a 'God Class' named 'A', you must apply that principle to break up the 'God Class' named 'B' that is present in the code.
+    
+    **Refactoring Strategies (JSON):**
+    ```json
+    {strategy}
+    ```
+    
+    **Original Java Code:**
+    ```java
+    {code}
+    ```
+    
+    **Your Task:**
+    1.  Synthesize all the provided refactoring strategies.
+    2.  Apply the combined strategies to the 'Original Java Code'.
+    3.  Produce a single, complete, and compilable block of refactored Java code.
+    
+    *** RESPONSE RULES ***
+    - Your response MUST be only the refactored Java code.
+    - DO NOT include any explanations, comments about your changes, or markdown formatting like ```java````.
+    - Ensure the final code is well-formatted and cohesive.
