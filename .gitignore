@@ -1,6 +1,7 @@
 # Bytecode and Python internals
 __pycache__/
 *.py[cod]
+.pytest_cache
 
 # Virtual environments
 .venv/
@@ -37,6 +38,9 @@ data/vector_db/
 models/
 ollama_data/
 
+#TinyDB JSON
+tinydb.json
+
 # Secrets / environment variables
 .env
 .env.*
@@ -49,3 +53,7 @@ config/.env
 # Optional: Docker
 Dockerfile.local
 docker-compose.override.yml
+
+# Intermediate files/output
+repos.txt
+clones/

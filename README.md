@@ -1,5 +1,6 @@
-# Legacy Code Migration Tool
+# Anti-Pattern Resolutor
 
+[![CI](https://github.com/Andrei-Constantin-Programmer/Legacy-Code-Migration/actions/workflows/python.yml/badge.svg?branch=main)](https://github.com/Andrei-Constantin-Programmer/Legacy-Code-Migration/actions/workflows/python.yml)
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 ![Status](https://img.shields.io/badge/status-research-orange.svg)
 
