@@ -16,7 +16,7 @@ refactor_strategist:
   user: |
     Based on the detected antipatterns, please generate refactoring strategies for the following code:
     
-    Original code is only for reference:
+    Original code is only for reference. Do NOT modify the code under any circumstances, but do refer to it:
     ```java
     {code}
     ```
@@ -26,11 +26,10 @@ refactor_strategist:
     {context}
     ```
     
-    Your task:
-    1.  For each object in the `antipatterns_detected` array, add a new key: `refactoring_strategy`.
-    2.  The value for `refactoring_strategy` **MUST** be a nested JSON object containing the following four keys:
-        - `core_principle`: (String) The software design principle being violated.
-        - `importance`: (String) A high-level explanation of WHY this refactoring is important (benefits vs. risks).
-        - `implementation_guide`: (String) A clear, step-by-step guide for a developer to implement the changes.
-        - `testability_improvement`: (String) A brief explanation of how the changes will improve code testability.
-    3.  Your final response **MUST** be only the complete, updated JSON object. Do not include any other text or explanations.
+    Your Task
+    1.  Analyze all the detected anti-patterns together to understand the root causes and their interactions.
+    2.  Create a single, unified implementation plan as a plain text response. Do not create separate strategies for each anti-pattern.
+    3.  Focus exclusively on the implementation details. Provide a clear, step-by-step guide on what architectural and structural changes are needed.
+    4.  **Crucially, do not suggest code edits or provide specific code snippets.** Your response must not contain any lines of code or code blocks.
+    5.  Do not explain the principles or the importance of the refactoring; concentrate only on the "how-to" implementation steps.
+    6.  Do not format your response as JSON.
