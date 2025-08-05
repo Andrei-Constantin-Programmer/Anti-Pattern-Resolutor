@@ -11,6 +11,7 @@ class PromptManager:
         self.ANTIPATTERN_SCANNER = "antipattern_scanner"
         self.REFACTOR_STRATEGIST = "refactor_strategist" 
         self.CODE_TRANSFORMER = "code_transformer"
+        self.CODE_REVIEWER = "code_reviewer"
 
         self.prompt_directory = settings.PROMPT_DIR
         # Initialize storage for prompt templates
@@ -26,6 +27,7 @@ class PromptManager:
                 self.ANTIPATTERN_SCANNER,
                 self.REFACTOR_STRATEGIST,
                 self.CODE_TRANSFORMER,
+                self.CODE_REVIEWER,
             ]
             
             for prompt_key in prompt_constants:

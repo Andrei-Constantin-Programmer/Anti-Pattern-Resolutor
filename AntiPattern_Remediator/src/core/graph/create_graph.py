@@ -11,7 +11,7 @@ from ..state import AgentState
 from ..agents import AntipatternScanner
 from ..agents import RefactorStrategist
 from ..agents import CodeTransformer
-from ..prompt import PromptManager
+from ..agents import CodeReviewerAgent
 
 # Imports for LangSmith tracing
 import os
@@ -63,7 +63,8 @@ class CreateGraph:
         self.agents = {
             'scanner': AntipatternScanner(retriever_tool, self.llm, self.prompt_manager),
             'strategist': RefactorStrategist(self.llm, self.prompt_manager),
-            'transformer': CodeTransformer(self.llm, self.prompt_manager)
+            'transformer': CodeTransformer(self.llm, self.prompt_manager),
+            'reviewer': CodeReviewerAgent(self.llm, self.prompt_manager),
         }
         self.workflow = self._build_graph()
     
@@ -83,6 +84,9 @@ class CreateGraph:
         graph.add_node("transform_code", self.agents['transformer'].transform_code)
         graph.add_node("display_transformed_code", self.agents['transformer'].display_transformed_code)
 
+        graph.add_node("review_code", self.agents['reviewer'].review_code)
+        graph.add_node("display_code_review_results", self.agents['reviewer'].display_code_review_results)
+
         graph.set_entry_point("retrieve_context")
         graph.add_edge("retrieve_context", "analyze_antipatterns")
         graph.add_edge("analyze_antipatterns", "display_antipatterns_results")
@@ -90,6 +94,8 @@ class CreateGraph:
         graph.add_edge("strategize_refactoring", "display_refactoring_results")
         graph.add_edge("display_refactoring_results", "transform_code")
         graph.add_edge("transform_code", "display_transformed_code")
-        graph.add_edge("display_transformed_code", END)
+        graph.add_edge("display_transformed_code", "review_code")
+        graph.add_edge("review_code", "display_code_review_results")
+        graph.add_edge("display_code_review_results", END)
 
         return graph.compile()
