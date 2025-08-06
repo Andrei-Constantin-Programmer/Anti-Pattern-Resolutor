@@ -6,6 +6,7 @@ from langgraph.graph import StateGraph, END
 from langchain.tools.retriever import create_retriever_tool
 
 from config.settings import settings
+from .conditional_edges import ConditionalEdges
 from ..llm_models import LLMCreator
 from ..state import AgentState
 from ..agents import AntipatternScanner
@@ -53,6 +54,7 @@ class CreateGraph:
 
         self.db_manager = db_manager
         self.prompt_manager = prompt_manager
+        self.conditional_edges = ConditionalEdges()
         retriever = self.db_manager.as_retriever()
         retriever_tool = create_retriever_tool(
             retriever,
@@ -95,7 +97,14 @@ class CreateGraph:
         graph.add_edge("display_refactoring_results", "transform_code")
         graph.add_edge("transform_code", "display_transformed_code")
         graph.add_edge("display_transformed_code", "review_code")
-        graph.add_edge("review_code", "display_code_review_results")
+        graph.add_conditional_edges(
+            "review_code",
+            self.conditional_edges.code_review_condition,
+            {
+                "transform_code": "transform_code",
+                "pass": "display_code_review_results",
+            },
+        )
         graph.add_edge("display_code_review_results", END)
 
         return graph.compile()

@@ -11,10 +11,11 @@ class CodeReviewerAgent:
 
     def review_code(self, state: AgentState):
         print("Reviewing code...")
+        times = state.get("code_review_times", 0) + 1
         try:
             prompt_template = self.prompt_manager.get_prompt(self.prompt_manager.CODE_REVIEWER)
             
-            msgs = state.get('msgs', [])
+            msgs = []
 
             formatted_messages = prompt_template.format_messages(
                 original_code=state['code'],
@@ -26,6 +27,11 @@ class CodeReviewerAgent:
             response = self.llm.invoke(formatted_messages)
             state["code_review_results"] = response.content if hasattr(response, 'content') else str(response)
             print("Code review completed successfully")
+            state["code_review_times"] = times
+            state["msgs"].append({
+                "role": "assistant", 
+                "content": state["code_review_results"]
+            })
         except Exception as e:
             print(f"Error during code review: {e}")
             state["code_review_results"] = f"Error occurred during code review: {e}"

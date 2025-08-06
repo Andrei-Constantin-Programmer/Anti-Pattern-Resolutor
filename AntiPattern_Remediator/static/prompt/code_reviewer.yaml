@@ -48,14 +48,13 @@ code_reviewer:
     **Important Notes:**
     Response Format:
     1. One word answer:
-    - Only return the agent name, do not return any other text.
-    - If the code passes all checks, return *pass*; otherwise
-    - *code_transformer* for code-level problems or *refactor_strategist* for strategy misalignment—only
+    - Only return one word: *pass* or *fail*
+    - If the code passes all checks and fulfills the refactoring requirements, return *pass*
+    - If there are any issues, problems, or the code doesn't meet the requirements, return *fail*
     2. a summary of the review findings, including:
     - Any detected issues with the refactored code
     - Any suggestions for improvement
-    - The agent responsible for addressing each issue
-
+    - Specific areas that need to be addressed
 
 
     
