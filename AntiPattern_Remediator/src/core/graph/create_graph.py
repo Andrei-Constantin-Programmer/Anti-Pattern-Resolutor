@@ -28,7 +28,8 @@ class CreateGraph:
         llm_model = llm_model or settings.LLM_MODEL
         self.llm = LLMCreator.create_llm(
             provider=settings.LLM_PROVIDER,
-            model_name=settings.LLM_MODEL
+            model_name=settings.LLM_MODEL,
+            **settings.parameters
          )
                 
         # LangSmith integration

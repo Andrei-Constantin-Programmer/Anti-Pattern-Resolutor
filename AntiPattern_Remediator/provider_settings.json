@@ -1,7 +1,11 @@
 {
   "ollama": {
     "LLM_MODEL": "granite3.3:8b",
-    "EMBEDDING_MODEL": "nomic-embed-text:latest"
+    "EMBEDDING_MODEL": "nomic-embed-text:latest",
+    "parameters": {
+      "temperature": 0.4,
+      "num_ctx": 131072
+    }
   },
   "ibm": {
     "LLM_MODEL": "ibm/granite-3-3-8b-instruct",
