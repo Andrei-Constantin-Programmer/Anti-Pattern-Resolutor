@@ -1,3 +1,4 @@
+from colorama import Fore, Style
 from ..state import AgentState
 from ..prompt import PromptManager
 
@@ -26,14 +27,14 @@ class CodeReviewerAgent:
             
             response = self.llm.invoke(formatted_messages)
             state["code_review_results"] = response.content if hasattr(response, 'content') else str(response)
-            print("Code review completed successfully")
+            print(Fore.GREEN + "Code review completed successfully" + Style.RESET_ALL)
             state["code_review_times"] = times
             state["msgs"].append({
                 "role": "assistant", 
                 "content": state["code_review_results"]
             })
         except Exception as e:
-            print(f"Error during code review: {e}")
+            print(Fore.RED + f"Error during code review: {e}" + Style.RESET_ALL)
             state["code_review_results"] = f"Error occurred during code review: {e}"
         return state
 
