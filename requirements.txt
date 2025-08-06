@@ -61,8 +61,9 @@ kubernetes==33.1.0
 langchain==0.3.26
 langchain-chroma==0.2.4
 langchain-community==0.3.27
-langchain-core==0.3.67
+langchain-core==0.3.68
 langchain-ollama==0.3.3
+langchain-openai==0.3.28
 langchain-text-splitters==0.3.8
 langgraph==0.5.0
 langgraph-checkpoint==2.1.0

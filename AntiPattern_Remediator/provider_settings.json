@@ -15,5 +15,13 @@
       "top_p": 1
     }
   },
-  "vllm": {}
+  "vllm": {
+      "LLM_MODEL": "granite-3.3-8b-instruct",
+      "EMBEDDING_MODEL": "nomic-embed-text-v1",
+      "parameters": {
+          "max_tokens": 1500,
+          "temperature": 0.2,
+          "echo": false
+      }
+  }
 }
