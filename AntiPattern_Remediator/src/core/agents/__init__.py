@@ -10,5 +10,6 @@ from .code_transformer import CodeTransformer
 __all__ = [
     "AntipatternScanner", 
     "RefactorStrategist",
-    "CodeTransformer"
+    "CodeTransformer",
+    "ExplainerAgent"
 ]

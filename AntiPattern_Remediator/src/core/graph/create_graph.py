@@ -11,6 +11,7 @@ from ..state import AgentState
 from ..agents import AntipatternScanner
 from ..agents import RefactorStrategist
 from ..agents import CodeTransformer
+from ..agents import ExplainerAgent
 from ..prompt import PromptManager
 
 
@@ -35,7 +36,8 @@ class CreateGraph:
         self.agents = {
             'scanner': AntipatternScanner(retriever_tool, self.llm, self.prompt_manager),
             'strategist': RefactorStrategist(self.llm, self.prompt_manager),
-            'transformer': CodeTransformer(self.llm, self.prompt_manager)
+            'transformer': CodeTransformer(self.llm, self.prompt_manager),
+            'explainer': ExplainerAgent(self.llm, self.prompt_manager)
         }
         self.workflow = self._build_graph()
     
