@@ -2,7 +2,6 @@
 """
 Main entry point - Legacy Code Migration Tool
 """
-from src.core.prompt import PromptManager
 from config.settings import initialize_settings
 # from scripts import seed_database
 from dotenv import load_dotenv
@@ -30,6 +29,7 @@ def main():
     # Temporary Lazy Imports
     from src.core.graph import CreateGraph
     from src.data.database import VectorDBManager, TinyDBManager
+    from src.core.prompt import PromptManager
     from scripts import seed_database
     
     # Initialize PromptManager
