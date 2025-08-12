@@ -1,5 +1,6 @@
 from ..state import AgentState
 from ..prompt import PromptManager
+from colorama import Fore, Style
 
 
 class RefactorStrategist:
@@ -25,9 +26,9 @@ class RefactorStrategist:
             
             response = self.llm.invoke(formatted_messages)
             state["refactoring_strategy_results"] = response.content if hasattr(response, 'content') else str(response)
-            print("Refactoring strategy created successfully")  
+            print(Fore.GREEN + "Refactoring strategy created successfully" + Style.RESET_ALL)
         except Exception as e:
-            print(f"Error during strategizing: {e}")
+            print(Fore.RED + f"Error during strategizing: {e}" + Style.RESET_ALL)
             state["refactoring_strategy_results"] = f"Error occurred during strategizing: {e}"
         return state
     

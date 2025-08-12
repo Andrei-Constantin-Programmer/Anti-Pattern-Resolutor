@@ -7,9 +7,15 @@ import pytest
 import tempfile
 import yaml
 from pathlib import Path
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import patch, Mock
 import sys
 import os
+from langchain_core.prompts import (
+    ChatPromptTemplate,
+    SystemMessagePromptTemplate,
+    HumanMessagePromptTemplate,
+    MessagesPlaceholder
+)
 
 # Add the project root to Python path
 project_root = Path(__file__).parent.parent.parent.parent
@@ -27,7 +33,7 @@ sys.modules['config'] = Mock()
 
 try:
     # Import the prompt_manager module directly
-    from core.prompt.prompt_manager import PromptManager
+    from src.core.prompt.prompt_manager import PromptManager
     from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
     IMPORTS_AVAILABLE = True
 except ImportError as e:
@@ -260,11 +266,23 @@ class TestYAMLLoading:
                 assert isinstance(loaded_template, ChatPromptTemplate)
                 
                 # Verify template structure includes system, user, and MessagesPlaceholder
+                assert "test_key" in manager._prompt_cache
+                loaded_template = manager._prompt_cache["test_key"]
+                assert loaded_template is not None
+                assert isinstance(loaded_template, ChatPromptTemplate)
+
                 messages = loaded_template.messages
                 assert len(messages) == 3
-                assert messages[0].role == "system"
-                assert messages[1].role == "user"
-                assert hasattr(messages[2], 'variable_name')  # MessagesPlaceholder
+
+                assert isinstance(messages[0], SystemMessagePromptTemplate)
+                assert messages[0].prompt.template == "Test system prompt"
+
+                assert isinstance(messages[1], HumanMessagePromptTemplate)
+                assert messages[1].prompt.template == "Test user prompt with {variable}"
+
+                assert isinstance(messages[2], MessagesPlaceholder)
+                assert messages[2].variable_name == "msgs"
+
     
     def test_load_prompt_from_yaml_with_malformed_yaml(self, capsys):
         """Test handling of malformed YAML file."""

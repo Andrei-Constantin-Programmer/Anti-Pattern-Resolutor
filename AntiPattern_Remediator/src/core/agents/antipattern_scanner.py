@@ -3,6 +3,7 @@ Antipattern scanner agent for detecting code smells and antipatterns
 """
 
 from ..state import AgentState
+from colorama import Fore, Style
 from ..prompt import PromptManager
 
 
@@ -22,9 +23,9 @@ class AntipatternScanner:
             # Use retriever_tool to get relevant context
             context = self.tool.invoke({"query": search_query})
             state["context"] = context
-            print(f"Successfully retrieved relevant context")
+            print(Fore.GREEN + f"Successfully retrieved relevant context" + Style.RESET_ALL)
         except Exception as e:
-            print(f"Error retrieving context: {e}")
+            print(Fore.RED + f"Error retrieving context: {e}" + Style.RESET_ALL)
             state["context"] = "No additional context available due to retrieval error."
         return state
 
@@ -44,9 +45,9 @@ class AntipatternScanner:
             
             response = self.llm.invoke(formatted_messages)
             state["antipatterns_scanner_results"] = response.content if hasattr(response, 'content') else str(response)
-            print("Analysis completed successfully")  
+            print(Fore.GREEN + "Analysis completed successfully" + Style.RESET_ALL)
         except Exception as e:
-            print(f"Error during analysis: {e}")
+            print(Fore.RED + f"Error during analysis: {e}" + Style.RESET_ALL)
             state["antipatterns_scanner_results"] = f"Error occurred during analysis: {e}"
         return state
         

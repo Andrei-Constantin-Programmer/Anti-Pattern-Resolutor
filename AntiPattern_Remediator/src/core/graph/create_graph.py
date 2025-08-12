@@ -14,6 +14,12 @@ from ..agents import CodeTransformer
 from ..agents import ExplainerAgent
 from ..prompt import PromptManager
 
+# Imports for LangSmith tracing
+import os
+from langsmith import Client
+from langchain.callbacks.tracers import LangChainTracer
+
+from colorama import Fore, Style
 
 class CreateGraph:
     """Graph"""
@@ -24,6 +30,28 @@ class CreateGraph:
             provider=settings.LLM_PROVIDER,
             model_name=settings.LLM_MODEL
          )
+                
+        # LangSmith integration
+        if settings.LLM_PROVIDER in ["ollama", "vllm"] and settings.LANGSMITH_ENABLED:
+            try:
+                os.environ["LANGCHAIN_TRACING_V2"] = "true"
+                client = Client(
+                    api_url=settings.LANGSMITH_ENDPOINT,
+                api_key=settings.LANGSMITH_API_KEY,
+                )
+                tracer = LangChainTracer(
+                    project_name=settings.LANGSMITH_PROJECT,
+                    client=client
+                )
+
+                self.llm.callbacks = [tracer]
+                print(Fore.GREEN + f"LangSmith tracing enabled for project: {settings.LANGSMITH_PROJECT} | provider - {settings.LLM_PROVIDER}" + Style.RESET_ALL)
+            
+            except Exception as e:
+                print(Fore.RED + f"Error initializing LangSmith: {e}" + Style.RESET_ALL)
+                self.llm.callbacks = []
+
+
         self.db_manager = db_manager
         self.prompt_manager = prompt_manager
         retriever = self.db_manager.as_retriever()

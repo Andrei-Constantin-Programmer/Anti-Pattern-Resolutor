@@ -2,13 +2,12 @@
 """
 Main entry point - Legacy Code Migration Tool
 """
-from src.core.graph import CreateGraph
 from src.core.prompt import PromptManager
-from src.data.database import VectorDBManager, TinyDBManager
 from config.settings import initialize_settings
-from scripts import seed_database
+# from scripts import seed_database
 from dotenv import load_dotenv
 load_dotenv()
+from colorama import Fore, Style
 
 def main():
     """Main function: Run antipattern analysis"""
@@ -26,7 +25,13 @@ def main():
 
     # Initialize global settings with selected provider
     settings = initialize_settings(provider)
+    print(Fore.GREEN + f"Using {settings.LLM_PROVIDER} with model {settings.LLM_MODEL}" + Style.RESET_ALL)
 
+    # Temporary Lazy Imports
+    from src.core.graph import CreateGraph
+    from src.data.database import VectorDBManager, TinyDBManager
+    from scripts import seed_database
+    
     # Initialize PromptManager
     print("Initializing PromptManager...")
     prompt_manager = PromptManager()
@@ -92,7 +97,7 @@ def main():
     langgraph = CreateGraph(db_manager, prompt_manager).workflow
     final_state = langgraph.invoke(initial_state)
 
-    print(f"\nAnalysis Complete!")
+    print(Fore.GREEN + f"\nAnalysis Complete!" + Style.RESET_ALL)
     print(f"Final state keys: {list(final_state.keys())}")
     print(f"Context retrieved: {'Yes' if final_state.get('context') else 'No'}")
     print(f"Analysis completed: {'Yes' if final_state.get('antipatterns_scanner_results') else 'No'}")
