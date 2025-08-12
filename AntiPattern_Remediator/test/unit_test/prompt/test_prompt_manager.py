@@ -599,7 +599,7 @@ class TestPromptLoadingIntegration:
             # Act: Load all prompts
             manager._load_all_prompts()
             
-            # Assert: Verify all four prompts were loaded
+            # Assert: Verify all prompts were loaded
             assert len(manager._prompt_cache) == 4
             assert "antipattern_scanner" in manager._prompt_cache
             assert "refactor_strategist" in manager._prompt_cache
