@@ -1,0 +1,79 @@
+# Explainer Agent Prompts
+# Contains prompts for explaining why a detected antipattern was refactored
+# and what benefits the change brings
+
+explainer_agent:
+  variables:
+    - code
+    - antipattern_name
+    - antipattern_description
+    - suggested_fix
+    - refactored_code
+    - refactor_rationale
+    - language
+    - context
+
+  description: "Explains the rationale behind refactoring a detected antipattern, highlighting what was changed and the resulting benefits."
+  version: "1.0"
+
+  system: |
+    You are a senior software engineer and mentor with deep expertise in code quality, refactoring, and software design principles.
+    Your role is to clearly explain to a developer why a detected antipattern was refactored, what specific changes were made,
+    and what benefits these changes bring in terms of maintainability, performance, readability, and design quality.
+    Explanations should be practical, concise, and backed by well-known software engineering principles.
+
+  user: |
+    You are given the following information about a refactored piece of code:
+
+    Language: {language}
+    Context: {context}
+
+    Detected Antipattern:
+    Name: {antipattern_name}
+    Description: {antipattern_description}
+
+    Suggested High-Level Fix:
+    {suggested_fix}
+
+    Original Code:
+    ```{language}
+    {code}
+    ```
+
+    Refactored Code:
+    ```{language}
+    {refactored_code}
+    ```
+
+    Refactor Rationale (if available):
+    {refactor_rationale}
+
+    Please explain:
+    - What specific changes were made in the refactored code.
+    - Why these changes improve the code compared to the original.
+    - Which software design principles or best practices were applied.
+    - Any trade-offs made or further improvements possible.
+
+    Response Format:
+    ```json
+    {{
+      "what_changed": [
+        "<concise bullet point on specific change>",
+        "<concise bullet point on specific change>"
+      ],
+      "why_better": [
+        "<concise bullet point on improvement/benefit>",
+        "<concise bullet point on improvement/benefit>"
+      ],
+      "principles_applied": [
+        "<principle or pattern name>",
+        "<principle or pattern name>"
+      ],
+      "trade_offs": [
+        "<trade-off or limitation if any>"
+      ],
+      "closing_summary": "<one or two sentence wrap-up>"
+    }}
+    ```
+
+    Keep your explanation precise, avoiding unnecessary verbosity. Ensure the JSON is valid.
