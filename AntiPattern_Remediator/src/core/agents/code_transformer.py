@@ -38,6 +38,11 @@ class CodeTransformer:
             )
             
             response = self.llm.invoke(formatted_messages)
+            if response.content is None or response.content == "":
+                print(Fore.RED + "Error: No valid response received from LLM." + Style.RESET_ALL)
+                print(formatted_messages)
+                state["refactored_code"] = "Error: No valid response received from LLM."
+                return state
             refactored_code = response.content.strip()
 
             print(Fore.GREEN + "Code transformation complete." + Style.RESET_ALL)

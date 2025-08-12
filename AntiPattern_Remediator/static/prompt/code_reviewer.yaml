@@ -3,8 +3,7 @@
 
 code_reviewer:
   variables:
-    - original_code
-    - refactoring_strategies
+    - diff_result
     - refactored_code
 
   description: "Code Reviewer Agent for managing code review tasks and applying refactoring strategies."
@@ -16,14 +15,9 @@ code_reviewer:
     you are responsible for determining whether the refactored code produced by the code refactoring engineer passes the review.
 
   user: |
-    original_code:
-    ```java
-    {original_code}
-    ```
-
-    refactored_code:
-    ```java
-    {refactored_code}
+    diff_result:
+    ```diff
+    {diff_result}
     ```
     
     refactoring strategies and decisions:
