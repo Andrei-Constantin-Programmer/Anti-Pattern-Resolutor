@@ -24,19 +24,27 @@ code_reviewer:
     {refactoring_strategies}
 
     Your task is:
-    1. Shallow-Level Analysis:
-    - Detect syntax errors, structural issues, or implementation mistakes in refactored_code
+    1. Diff-Based Analysis:
+    - Use the provided diff_result to understand the exact changes made during refactoring
+    - Analyze the diff to identify added, removed, and modified code sections
+    - Verify that all changes in the diff align with the intended refactoring goals
+    - Check if the diff shows proper implementation of the refactoring strategy
+
+    2. Shallow-Level Analysis:
+    - Detect syntax errors, structural issues, or implementation mistakes in the refactored code
     - Check for formatting problems, unreachable code, missing returns, or logic bugs
-    - Ensure that the refactored code without any antipatterns or issues
+    - Ensure that the refactored code is free from antipatterns or issues
+    - Use the diff_result to pinpoint specific lines where issues may occur
 
-    2. Strategy Compliance:
+    3. Strategy Compliance:
     - Review refactoring_strategy_results to understand the intended goals
-    - Check if refactored_code follows the decisions and guidance from the strategy
+    - Cross-reference the diff_result with the strategy decisions to ensure compliance
     - Identify missing, misapplied, or extra changes that deviate from the strategy
+    - Verify that all strategy requirements are reflected in the diff changes
 
-    3. Final Evaluation:
-    - Assess whether the code fulfills the intended refactoring task
-    - Suggest improvements if issues are found, and provide actionable feedback, like which agent should address them (e.g., code_transformer, refactor_strategist).
+    4. Final Evaluation:
+    - Assess whether the changes shown in diff_result fulfill the intended refactoring task
+    - Suggest improvements if issues are found, and provide actionable feedback, like which agent should address them (e.g., code_transformer, refactor_strategist)
     - If no issues are found, confirm that the code passes the review
 
     **Important Notes:**
