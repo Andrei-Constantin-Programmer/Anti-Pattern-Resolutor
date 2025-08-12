@@ -21,7 +21,7 @@ class CodeTransformer:
         if not strategy:
             print("No valid strategy received. Skipping transformation.")
             state["refactored_code"] = "Transformation skipped due to missing strategy."
-            return state
+            raise ValueError("No valid strategy received for code transformation.")
 
         print("Strategy received, proceeding with transformation.")
 
@@ -42,7 +42,7 @@ class CodeTransformer:
                 print(Fore.RED + "Error: No valid response received from LLM." + Style.RESET_ALL)
                 print(formatted_messages)
                 state["refactored_code"] = "Error: No valid response received from LLM."
-                return state
+                raise ValueError("No valid response received from LLM.")
             refactored_code = response.content.strip()
 
             print(Fore.GREEN + "Code transformation complete." + Style.RESET_ALL)
