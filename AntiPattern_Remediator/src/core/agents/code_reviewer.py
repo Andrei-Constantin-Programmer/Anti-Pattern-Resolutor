@@ -43,6 +43,7 @@ class CodeReviewerAgent:
         except Exception as e:
             print(Fore.RED + f"Error during code review: {e}" + Style.RESET_ALL)
             state["code_review_results"] = f"Error occurred during code review: {e}"
+        state["code_review_times"] = times
         return state
 
     def display_code_review_results(self, state: AgentState) -> AgentState:
