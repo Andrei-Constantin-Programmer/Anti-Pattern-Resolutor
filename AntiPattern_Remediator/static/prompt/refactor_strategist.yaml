@@ -6,6 +6,7 @@ refactor_strategist:
     - code
     - context # Scanner findings
     - trove_context # Trove search results
+    - msgs
 
   description: "Generates refactoring strategies for detected antipatterns, combining scanner findings with knowledge from the Anti-Pattern Trove"
   version: "1.1"
