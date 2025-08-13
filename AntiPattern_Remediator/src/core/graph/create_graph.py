@@ -21,10 +21,12 @@ from langchain.callbacks.tracers import LangChainTracer
 
 from colorama import Fore, Style
 
+
 class CreateGraph:
     """Graph"""
-    
-    def __init__(self, db_manager, prompt_manager, llm_model=None):
+
+    def __init__(self, db_manager, prompt_manager: PromptManager, retriever=None, llm_model=None):
+        # LLM init
         llm_model = llm_model or settings.LLM_MODEL
         self.llm = LLMCreator.create_llm(
             provider=settings.LLM_PROVIDER,
@@ -38,54 +40,52 @@ class CreateGraph:
                 os.environ["LANGCHAIN_TRACING_V2"] = "true"
                 client = Client(
                     api_url=settings.LANGSMITH_ENDPOINT,
-                api_key=settings.LANGSMITH_API_KEY,
+                    api_key=settings.LANGSMITH_API_KEY,
                 )
                 tracer = LangChainTracer(
                     project_name=settings.LANGSMITH_PROJECT,
                     client=client
                 )
-
                 self.llm.callbacks = [tracer]
-                print(Fore.GREEN + f"LangSmith tracing enabled for project: {settings.LANGSMITH_PROJECT} | provider - {settings.LLM_PROVIDER}" + Style.RESET_ALL)
-            
+                print(
+                    Fore.GREEN
+                    + f"LangSmith tracing enabled for project: {settings.LANGSMITH_PROJECT} | provider - {settings.LLM_PROVIDER}"
+                    + Style.RESET_ALL
+                )
             except Exception as e:
                 print(Fore.RED + f"Error initializing LangSmith: {e}" + Style.RESET_ALL)
                 self.llm.callbacks = []
 
-
+        # Trove plumbing
         self.db_manager = db_manager
         self.prompt_manager = prompt_manager
         self.conditional_edges = ConditionalEdges()
         retriever = self.db_manager.as_retriever()
         retriever_tool = create_retriever_tool(
-            retriever,
+            self.retriever,
             name="retrieve_Java_antipatterns",
-            description="Search for Java anti-patterns in the codebase",
+            description="Search the Anti-Pattern Trove (Chroma/TinyDB) for Java anti-pattern definitions, symptoms, and refactoring guidance.",
         )
 
+        # Agents
         self.agents = {
             'scanner': AntipatternScanner(retriever_tool, self.llm, self.prompt_manager),
             'strategist': RefactorStrategist(self.llm, self.prompt_manager),
             'transformer': CodeTransformer(self.llm, self.prompt_manager),
             'reviewer': CodeReviewerAgent(self.llm, self.prompt_manager),
         }
+
+        # Build the LangGraph workflow
         self.workflow = self._build_graph()
-    
-    
+
     def _build_graph(self):
         """Build LangGraph workflow"""
-            
         graph = StateGraph(AgentState)
-        
-        graph.add_node("retrieve_context", self.agents['scanner'].retrieve_context)
-        graph.add_node("analyze_antipatterns", self.agents['scanner'].analyze_antipatterns)
-        graph.add_node("display_antipatterns_results", self.agents['scanner'].display_antipatterns_results)
 
-        graph.add_node("strategize_refactoring", self.agents['strategist'].strategize_refactoring)
-        graph.add_node("display_refactoring_results", self.agents['strategist'].display_refactoring_results)
-        
-        graph.add_node("transform_code", self.agents['transformer'].transform_code)
-        graph.add_node("display_transformed_code", self.agents['transformer'].display_transformed_code)
+        # Scanner: retrieve + analyze
+        graph.add_node("retrieve_context", self.agents["scanner"].retrieve_context)
+        graph.add_node("analyze_antipatterns", self.agents["scanner"].analyze_antipatterns)
+        graph.add_node("display_antipatterns_results", self.agents["scanner"].display_antipatterns_results)
 
         graph.add_node("review_code", self.agents['reviewer'].review_code)
         graph.add_node("display_code_review_results", self.agents['reviewer'].display_code_review_results)
