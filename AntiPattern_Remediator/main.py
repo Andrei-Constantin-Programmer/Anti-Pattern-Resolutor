@@ -3,15 +3,16 @@ Main entry point - Legacy Code Migration Tool
 """
 from src.core.prompt import PromptManager
 from config.settings import initialize_settings
-# from scripts import seed_database
+
 from dotenv import load_dotenv
 load_dotenv()
 from colorama import Fore, Style
 
-# NEW: pretty printing + diff
+
 import json
 import difflib
 import textwrap
+import re
 
 
 def _print_section(title: str, body: str | None, color=Fore.CYAN):
@@ -41,6 +42,34 @@ def _unified_diff(old: str, new: str, language_label="java"):
         return "No differences."
     # Wrap in a fenced block so it’s readable in logs/terminals that support it
     return f"```diff\n{diff_text}\n```"
+
+# add these helpers above main()
+
+def _strip_code_fences(s: str) -> str:
+    """Remove a single top-level fenced code block if present."""
+    if not isinstance(s, str):
+        return s
+    m = re.match(r"^\s*```[a-zA-Z0-9]*\s*\n([\s\S]*?)\n```", s.strip())
+    return m.group(1) if m else s
+
+def _maybe_parse_json_block(s):
+    """If s is a fenced JSON block or JSON string, return a dict; otherwise return s unchanged."""
+    if isinstance(s, dict):
+        return s
+    if not isinstance(s, str):
+        return s
+    # Try fenced JSON first
+    blocks = re.findall(r"```(?:json)?\s*([\s\S]*?)\s*```", s, flags=re.IGNORECASE)
+    for cand in blocks + [s]:
+        cand = cand.strip()
+        if not cand:
+            continue
+        try:
+            return json.loads(cand)
+        except Exception:
+            continue
+    return s
+
 
 
 def main():
@@ -142,35 +171,41 @@ def main():
     print(f"Analysis completed: {'Yes' if final_state.get('antipatterns_scanner_results') else 'No'}")
     print(f"Refactored code: {'Yes' if final_state.get('refactored_code') else 'No'}")
 
-    # ----- Detailed Output -----
-    # 1) Scanner results (JSON expected)
-    scanner = final_state.get("antipatterns_scanner_results")
+        # ----- Detailed Output -----
+    # 1) Scanner results
+    scanner = _maybe_parse_json_block(final_state.get("antipatterns_scanner_results"))
     if scanner:
-        _print_json_section("Antipatterns Detected", scanner)
+        if isinstance(scanner, dict):
+            _print_json_section("Antipatterns Detected", scanner)
+        else:
+            _print_section("Antipatterns Detected", scanner)
 
-    # 2) Refactoring strategy (JSON/string)
-    strategy = final_state.get("refactoring_strategy_results")
+    # 2) Refactoring strategy
+    strategy = _maybe_parse_json_block(final_state.get("refactoring_strategy_results"))
     if strategy:
-        _print_json_section("Refactoring Strategy", strategy)
+        if isinstance(strategy, (dict, list)):
+            _print_json_section("Refactoring Strategy", strategy)
+        else:
+            _print_section("Refactoring Strategy", strategy)
 
     # 3) Refactored code
-    refactored = final_state.get("refactored_code")
-    if refactored:
-        _print_section("Refactored Code", f"```java\n{textwrap.dedent(refactored).strip()}\n```")
+    refactored_raw = final_state.get("refactored_code")
+    if refactored_raw:
+        refactored_clean = _strip_code_fences(textwrap.dedent(refactored_raw).strip())
+        _print_section("Refactored Code", f"```java\n{refactored_clean}\n```")
 
         # 3a) Unified diff (original -> refactored)
-        diff_text = _unified_diff(initial_state.get("code", ""), refactored, "java")
+        diff_text = _unified_diff(initial_state.get("code", ""), refactored_clean, "java")
         _print_section("Unified Diff (original → refactored)", diff_text)
 
     # 4) Explainer output (JSON first, fallback to raw)
-    explanation_json = final_state.get("explanation_json")
+    explanation_json = _maybe_parse_json_block(final_state.get("explanation_json"))
     explanation_raw = final_state.get("explanation_response_raw")
-    if explanation_json:
+    if isinstance(explanation_json, dict) and explanation_json:
         _print_json_section("Explanation (Structured)", explanation_json)
     elif explanation_raw:
         _print_section("Explanation (Raw)", explanation_raw)
 
-    print(Fore.GREEN + "\nDone." + Style.RESET_ALL)
 
 
 if __name__ == "__main__":

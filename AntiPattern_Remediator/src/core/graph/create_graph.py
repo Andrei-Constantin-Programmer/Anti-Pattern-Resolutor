@@ -2,16 +2,14 @@
 Enhanced workflow management using LangGraph
 """
 
+from typing import Dict, Any, Optional
 from langgraph.graph import StateGraph, END
 from langchain.tools.retriever import create_retriever_tool
 
 from config.settings import settings
 from ..llm_models import LLMCreator
 from ..state import AgentState
-from ..agents import AntipatternScanner
-from ..agents import RefactorStrategist
-from ..agents import CodeTransformer
-from ..agents import ExplainerAgent
+from ..agents import AntipatternScanner, RefactorStrategist, CodeTransformer, ExplainerAgent
 from ..prompt import PromptManager
 
 # Imports for LangSmith tracing
@@ -25,15 +23,15 @@ from colorama import Fore, Style
 class CreateGraph:
     """Graph"""
 
-    def __init__(self, db_manager, prompt_manager: PromptManager, llm_model=None):
-        llm_model = llm_model or settings.LLM_MODEL
+    def __init__(self, db_manager, prompt_manager: PromptManager, llm_model: Optional[str] = None):
+        model_name = llm_model or settings.LLM_MODEL  # <-- use the arg if provided
         self.llm = LLMCreator.create_llm(
             provider=settings.LLM_PROVIDER,
-            model_name=settings.LLM_MODEL
+            model_name=model_name
         )
 
-        # LangSmith integration
-        if settings.LLM_PROVIDER in ["ollama", "vllm"] and settings.LANGSMITH_ENABLED:
+        # LangSmith integration (best-effort)
+        if settings.LLM_PROVIDER in ["ollama", "vllm"] and getattr(settings, "LANGSMITH_ENABLED", False):
             try:
                 os.environ["LANGCHAIN_TRACING_V2"] = "true"
                 client = Client(
@@ -44,6 +42,7 @@ class CreateGraph:
                     project_name=settings.LANGSMITH_PROJECT,
                     client=client
                 )
+                # Some LangChain models accept callbacks on init; we set it directly here.
                 self.llm.callbacks = [tracer]
                 print(
                     Fore.GREEN
@@ -57,12 +56,17 @@ class CreateGraph:
         self.db_manager = db_manager
         self.prompt_manager = prompt_manager
 
-        retriever = self.db_manager.as_retriever()
-        retriever_tool = create_retriever_tool(
-            retriever,
-            name="retrieve_Java_antipatterns",
-            description="Search for Java anti-patterns in the codebase",
-        )
+        # --- Defensive retriever tool creation ---
+        retriever_tool = None
+        try:
+            retriever = self.db_manager.as_retriever()
+            retriever_tool = create_retriever_tool(
+                retriever,
+                name="retrieve_Java_antipatterns",
+                description="Search for Java anti-patterns in the codebase",
+            )
+        except Exception as e:
+            print(Fore.YELLOW + f"Warning: could not create retriever tool ({e}). Scanner will run without retrieval." + Style.RESET_ALL)
 
         self.agents = {
             "scanner": AntipatternScanner(retriever_tool, self.llm, self.prompt_manager),
@@ -73,27 +77,37 @@ class CreateGraph:
         self.workflow = self._build_graph()
 
     # Local node fns (tiny utilities)
-    def _prepare_explainer_inputs(self, state: AgentState) -> AgentState:
-        """
-        Normalize/ensure keys for the ExplainerAgent to avoid KeyErrors and
-        to provide best-effort defaults.
-        """
+    def _prepare_explainer_inputs(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """Ensure explainer always has the fields it needs."""
         state.setdefault("language", "Java")
         state.setdefault("context", "")
-        # If transformer provided a summary under a different key, normalize:
-        if "refactor_summary" in state and not state.get("refactor_rationale"):
-            state["refactor_rationale"] = state["refactor_summary"]
 
-        # Ensure we have both original and refactored code fields present (even if empty)
-        state.setdefault("code", state.get("original_code", ""))
-        state.setdefault("refactored_code", state.get("transformed_code", state.get("refactored_code", "")))
+        # From scanner JSON (pick the first antipattern as headline)
+        scan = state.get("antipatterns_scanner_results")
+        if isinstance(scan, dict):
+            ap_list = scan.get("antipatterns_detected") or []
+            if ap_list and isinstance(ap_list, list) and isinstance(ap_list[0], dict):
+                head = ap_list[0]
+                state.setdefault("antipattern_name", head.get("name", "Unknown antipattern") or "Unknown antipattern")
+                state.setdefault("antipattern_description", head.get("description", "") or "")
+
+        # From strategy text (use as a suggested_fix / rationale)
+        strat = state.get("refactoring_strategy_results")
+        if strat and not state.get("suggested_fix"):
+            # Hand the whole plan as a suggestion/rationale to the explainer
+            state["suggested_fix"] = str(strat)
+
+        # Normalize code fields
+        state.setdefault("code", state.get("original_code", state.get("code", "")) or "")
+        state.setdefault("refactored_code", state.get("refactored_code", "") or "")
+
+        # Rationale (if transformer didn’t set it)
+        state.setdefault("refactor_rationale", state.get("refactor_summary", "") or "")
 
         return state
 
-
     def _build_graph(self):
         """Build LangGraph workflow"""
-
         graph = StateGraph(AgentState)
 
         # Scanner
@@ -123,7 +137,7 @@ class CreateGraph:
         graph.add_edge("display_refactoring_results", "transform_code")
         graph.add_edge("transform_code", "display_transformed_code")
 
-        # NEW: route to explainer before END
+        # Route to explainer before END
         graph.add_edge("display_transformed_code", "prepare_explainer_inputs")
         graph.add_edge("prepare_explainer_inputs", "explain_antipattern")
         graph.add_edge("explain_antipattern", "display_explanation")
