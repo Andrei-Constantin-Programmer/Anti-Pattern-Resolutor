@@ -19,8 +19,8 @@ class CodeReviewerAgent:
             prompt_template = self.prompt_manager.get_prompt(self.prompt_manager.CODE_REVIEWER)
             
             msgs = []
-            original_code=state['code']
-            refactored_code=state['refactored_code']
+            original_code=state.get('code', '')
+            refactored_code=state.get('refactored_code', '')
             diff = difflib.unified_diff(
                 original_code.splitlines(), 
                 refactored_code.splitlines(), 
@@ -39,7 +39,8 @@ class CodeReviewerAgent:
             state["code_review_results"] = response.content if hasattr(response, 'content') else str(response)
             print(Fore.GREEN + "Code review completed successfully" + Style.RESET_ALL)
             review_feedback = f"Code Review Feedback (Round {times}): {state['code_review_results']}"
-            state["msgs"].append(HumanMessage(content=review_feedback))
+            msgs.append(HumanMessage(content=review_feedback))
+            state["msgs"] = msgs
         except Exception as e:
             print(Fore.RED + f"Error during code review: {e}" + Style.RESET_ALL)
             state["code_review_results"] = f"Error occurred during code review: {e}"

@@ -24,6 +24,8 @@ class CodeTransformer:
                 print("No valid strategy received. Skipping transformation.")
                 state["refactored_code"] = "Transformation skipped due to missing strategy."
                 raise ValueError("No valid strategy received for code transformation.")
+            else:
+                print("Strategy received, proceeding with transformation.")
             if msgs != []:
                 print(f"{len(msgs)} Code Review messages received, proceeding with transformation.")
 
