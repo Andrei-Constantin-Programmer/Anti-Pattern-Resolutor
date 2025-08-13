@@ -18,7 +18,7 @@ class CodeReviewerAgent:
         try:
             prompt_template = self.prompt_manager.get_prompt(self.prompt_manager.CODE_REVIEWER)
             
-            msgs = []
+            msgs = state.get('msgs', [])
             original_code=state.get('code', '')
             refactored_code=state.get('refactored_code', '')
             diff = difflib.unified_diff(
@@ -32,7 +32,7 @@ class CodeReviewerAgent:
             formatted_messages = prompt_template.format_messages(
                 diff_result=diff_result,
                 refactoring_strategies=state['refactoring_strategy_results'],
-                msgs=msgs
+                msgs=[]
             )
             
             response = self.llm.invoke(formatted_messages)
