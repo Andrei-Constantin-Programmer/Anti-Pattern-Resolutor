@@ -7,24 +7,7 @@ import json, re
 from ..state import AgentState
 from colorama import Fore, Style
 from ..prompt import PromptManager
-
-
-def _parse_json_block(text: str) -> Optional[Dict[str, Any]]:
-    """Extract and parse the first JSON block (fenced or raw)."""
-    if not isinstance(text, str):
-        return None
-    blocks = re.findall(r"```(?:json)?\s*([\s\S]*?)\s*```", text, flags=re.IGNORECASE)
-    for cand in blocks + [text]:
-        cand = cand.strip()
-        if not cand:
-            continue
-        try:
-            val = json.loads(cand)
-            if isinstance(val, dict):
-                return val
-        except Exception:
-            continue
-    return None
+from src.core.utils import extract_first_json
 
 
 class AntipatternScanner:
@@ -70,7 +53,7 @@ class AntipatternScanner:
             raw = getattr(response, "content", None) or str(response)
 
             # Prefer parsed dict; fall back to raw string if parsing fails
-            parsed = _parse_json_block(raw)
+            parsed = extract_first_json(raw)
             state["antipatterns_scanner_results"] = parsed if parsed else raw
 
             print(Fore.GREEN + "Analysis completed successfully" + Style.RESET_ALL)

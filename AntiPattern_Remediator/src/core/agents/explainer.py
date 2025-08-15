@@ -1,8 +1,8 @@
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 import json
-import re
 from langchain_core.language_models import BaseLanguageModel
 from ..prompt import PromptManager
+from src.core.utils import extract_first_json
 
 
 class ExplainerAgent:
@@ -43,7 +43,7 @@ class ExplainerAgent:
         state["explanation_response_raw"] = raw
 
         # Try to parse JSON block; fall back to a minimal structure if needed
-        parsed = self._safe_parse_json(raw)
+        parsed = extract_first_json(raw)
         state["explanation_json"] = parsed if isinstance(parsed, dict) else self._coerce_minimal_json(state)
 
         return state
@@ -93,29 +93,6 @@ class ExplainerAgent:
             refactor_rationale=state.get("refactor_rationale", ""),
             msgs=[],  # ensure placeholder is satisfied
         )
-
-    def _safe_parse_json(self, text: str) -> Optional[dict]:
-        """
-        Extract and parse the first JSON block from text, tolerating code fences.
-        Returns dict on success, or None on failure.
-        """
-        # Try fenced JSON blocks
-        fenced = re.findall(r"```(?:json)?\s*([\s\S]*?)\s*```", text, flags=re.IGNORECASE)
-        candidates: List[str] = []
-        candidates.extend(fenced)
-        candidates.append(text)  # fall back to whole text
-
-        for cand in candidates:
-            cand = cand.strip()
-            if not cand:
-                continue
-            try:
-                parsed = json.loads(cand)
-                if isinstance(parsed, dict):
-                    return parsed
-            except Exception:
-                continue
-        return None
 
     def _coerce_minimal_json(self, state: Dict[str, Any]) -> dict:
         """
