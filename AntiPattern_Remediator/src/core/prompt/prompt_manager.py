@@ -1,30 +1,42 @@
 from typing import Optional, List
+from pathlib import Path
 import yaml
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 from config.settings import settings
+
 
 class PromptManager:
     def __init__(self):
         self.ANTIPATTERN_SCANNER = "antipattern_scanner"
         self.REFACTOR_STRATEGIST = "refactor_strategist"
         self.CODE_TRANSFORMER = "code_transformer"
-        self.EXPLAINER_AGENT = "explainer_agent"   # <-- NEW
+        self.EXPLAINER_AGENT = "explainer_agent"   # may be absent in tests that mock __init__
 
-        self.prompt_directory = settings.PROMPT_DIR
+        self.prompt_directory: Path = settings.PROMPT_DIR
         self._prompt_cache = {}
         self._load_all_prompts()
 
     def _load_all_prompts(self) -> None:
-        prompt_constants = [
-            self.ANTIPATTERN_SCANNER,
-            self.REFACTOR_STRATEGIST,
-            self.CODE_TRANSFORMER,
-            self.EXPLAINER_AGENT,  # <-- NEW
-        ]
+        """
+        Load all prompts listed on the instance. Tests sometimes mock __init__,
+        so some attributes may be missing — guard for that.
+        """
+        prompt_attrs = (
+            "ANTIPATTERN_SCANNER",
+            "REFACTOR_STRATEGIST",
+            "CODE_TRANSFORMER",
+            "EXPLAINER_AGENT",  # include if present
+        )
+        prompt_constants: List[str] = []
+        for attr in prompt_attrs:
+            if hasattr(self, attr):
+                prompt_constants.append(getattr(self, attr))
+
         for prompt_key in prompt_constants:
             filename = f"{prompt_key}.yaml"
             self._load_prompt_from_yaml(filename, prompt_key)
+
         print(f"Successfully loaded {len(self._prompt_cache)} prompts")
         print("=" * 60)
 
@@ -34,15 +46,25 @@ class PromptManager:
             print(f"Warning: Prompt file {yaml_path} not found")
             return
 
-        with open(yaml_path, "r", encoding="utf-8") as f:
-            config = yaml.safe_load(f)
+        # Handle malformed or empty YAML safely
+        try:
+            with open(yaml_path, "r", encoding="utf-8") as f:
+                config = yaml.safe_load(f)
+        except Exception as e:
+            print(f"Error loading prompt from {filename}: {e}")
+            return
+
+        if not config:
+            print(f"Warning: Empty or invalid YAML in {filename}")
+            return
+
         if prompt_key not in config:
             print(f"Warning: Section '{prompt_key}' not found in {filename}")
             return
 
         prompt_config = config[prompt_key]
 
-        # IMPORTANT: use from_messages(...)
+        # Build template using from_messages (system, user, and history placeholder)
         template = ChatPromptTemplate.from_messages([
             ("system", prompt_config.get("system", "")),
             ("user",   prompt_config.get("user", "")),
@@ -57,11 +79,10 @@ class PromptManager:
             return None
         return self._prompt_cache[prompt_key]
 
-    # <-- NEW helper used by ExplainerAgent
-    def render(self, prompt_key: str, **kwargs) -> list[dict]:
+    # Helper used by ExplainerAgent
+    def render(self, prompt_key: str, **kwargs) -> List:
         tmpl = self.get_prompt(prompt_key)
         if tmpl is None:
             return []
-        if "msgs" not in kwargs:
-            kwargs["msgs"] = []
+        kwargs.setdefault("msgs", [])
         return tmpl.format_messages(**kwargs)
