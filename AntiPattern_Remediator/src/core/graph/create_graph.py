@@ -32,9 +32,9 @@ class CreateGraph:
         self.llm = LLMCreator.create_llm(
             provider=settings.LLM_PROVIDER,
             model_name=settings.LLM_MODEL,
-            **settings.parameters
-         )
-                
+            **getattr(settings, "parameters", {})
+        )
+
         # LangSmith integration
         if settings.LLM_PROVIDER in ["ollama", "vllm"] and settings.LANGSMITH_ENABLED:
             try:
@@ -61,7 +61,10 @@ class CreateGraph:
         self.db_manager = db_manager
         self.prompt_manager = prompt_manager
         self.conditional_edges = ConditionalEdges()
-        retriever = self.db_manager.as_retriever()
+
+        # ✅ assign the instance attribute before use
+        self.retriever = retriever or self.db_manager.as_retriever()
+
         retriever_tool = create_retriever_tool(
             self.retriever,
             name="retrieve_Java_antipatterns",
@@ -70,10 +73,11 @@ class CreateGraph:
 
         # Agents
         self.agents = {
-            'scanner': AntipatternScanner(retriever_tool, self.llm, self.prompt_manager),
-            'strategist': RefactorStrategist(self.llm, self.prompt_manager),
-            'transformer': CodeTransformer(self.llm, self.prompt_manager),
-            'reviewer': CodeReviewerAgent(self.llm, self.prompt_manager),
+            "scanner": AntipatternScanner(retriever_tool, self.llm, self.prompt_manager),
+            # If your strategist uses the unified invoke-style retriever:
+            "strategist": RefactorStrategist(self.llm, self.prompt_manager, retriever=self.retriever),
+            "transformer": CodeTransformer(self.llm, self.prompt_manager),
+            "reviewer": CodeReviewerAgent(self.llm, self.prompt_manager),
         }
 
         # Build the LangGraph workflow
@@ -88,9 +92,19 @@ class CreateGraph:
         graph.add_node("analyze_antipatterns", self.agents["scanner"].analyze_antipatterns)
         graph.add_node("display_antipatterns_results", self.agents["scanner"].display_antipatterns_results)
 
-        graph.add_node("review_code", self.agents['reviewer'].review_code)
-        graph.add_node("display_code_review_results", self.agents['reviewer'].display_code_review_results)
+        # Strategist: plan using trove context
+        graph.add_node("strategize_refactoring", self.agents["strategist"].strategize_refactoring)
+        graph.add_node("display_refactoring_results", self.agents["strategist"].display_refactoring_results)
 
+        # Transformer: apply changes
+        graph.add_node("transform_code", self.agents["transformer"].transform_code)
+        graph.add_node("display_transformed_code", self.agents["transformer"].display_transformed_code)
+
+        # Reviewer: code review + conditional loop-back
+        graph.add_node("review_code", self.agents["reviewer"].review_code)
+        graph.add_node("display_code_review_results", self.agents["reviewer"].display_code_review_results)
+
+        # Topology
         graph.set_entry_point("retrieve_context")
         graph.add_edge("retrieve_context", "analyze_antipatterns")
         graph.add_edge("analyze_antipatterns", "display_antipatterns_results")
@@ -99,6 +113,7 @@ class CreateGraph:
         graph.add_edge("display_refactoring_results", "transform_code")
         graph.add_edge("transform_code", "display_transformed_code")
         graph.add_edge("display_transformed_code", "review_code")
+
         graph.add_conditional_edges(
             "review_code",
             self.conditional_edges.code_review_condition,
@@ -107,6 +122,7 @@ class CreateGraph:
                 "pass": "display_code_review_results",
             },
         )
+
         graph.add_edge("display_code_review_results", END)
 
         return graph.compile()
