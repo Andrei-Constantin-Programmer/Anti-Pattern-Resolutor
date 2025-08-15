@@ -3,10 +3,12 @@ from langchain_core.prompts import ChatPromptTemplate
 from ..state import AgentState
 from ..prompt import PromptManager
 from colorama import Fore, Style
+from src.data import trove_search_context  # re-exported from src/data/__init__.py
 
 
 class RefactorStrategist:
     """Refactor strategist agent for managing code refactoring tasks.
+
     - Builds search queries from scanner findings
     - Retrieves context from the Trove (TinyDB/Chroma) via retriever or retriever_tool
     - Feeds `code`, `context` (scanner findings), and `trove_context` into the prompt
@@ -16,12 +18,10 @@ class RefactorStrategist:
     def __init__(self, model, prompt_manager: PromptManager, retriever=None, retriever_tool=None):
         self.prompt_manager = prompt_manager
         self.llm = model
-        self.retriever = retriever            # e.g., TinyDBManager or Chroma.as_retriever()
-        self.retriever_tool = retriever_tool  # optional LangChain retriever tool
+        self.retriever = retriever
+        self.retriever_tool = retriever_tool
 
-    # -------------------------------------------------------------------------
-    # Helpers
-    # -------------------------------------------------------------------------
+
     def _build_queries_from_findings(self, findings: Any) -> List[str]:
         """Turn scanner findings into focused search queries."""
         if not findings:
@@ -46,45 +46,7 @@ class RefactorStrategist:
             queries = ["Java anti-patterns", "refactoring strategy"]
         return queries[:6]
 
-    def _trove_search(self, queries: List[str], cap: int = 8) -> str:
-        """Query the Trove and return a compact, deduplicated text block."""
-        docs = []
 
-        for q in queries:
-            try:
-                if self.retriever and hasattr(self.retriever, "get_relevant_documents"):
-                    docs.extend(self.retriever.get_relevant_documents(q))
-                elif self.retriever and hasattr(self.retriever, "invoke"):
-                    docs.extend(self.retriever.invoke(q))
-                elif self.retriever_tool:
-                    res = self.retriever_tool.invoke({"query": q})
-                    if isinstance(res, list):
-                        docs.extend(res)
-                    else:
-                        # Normalize to an object with page_content
-                        docs.append(type("Doc", (), {"page_content": str(res)})())
-            except Exception:
-                # Retrieval shouldn't fail the whole step
-                continue
-
-        # De-duplicate and cap
-        unique_chunks, seen = [], set()
-        for d in docs:
-            text = getattr(d, "page_content", str(d)).strip()
-            if not text:
-                continue
-            sig = text[:160]
-            if sig not in seen:
-                seen.add(sig)
-                unique_chunks.append(text)
-            if len(unique_chunks) >= cap:
-                break
-
-        return "\n\n---\n\n".join(unique_chunks)
-
-    # -------------------------------------------------------------------------
-    # Pipeline steps
-    # -------------------------------------------------------------------------
     def strategize_refactoring(self, state: AgentState):
         print("Strategizing refactoring options...")
         try:
@@ -98,19 +60,23 @@ class RefactorStrategist:
             findings = state.get("antipatterns_scanner_results")
             code = state.get("code", "")
 
-            # Build Trove queries from findings and fetch evidence
+            # Trove evidence (via tiny helper)
             queries = self._build_queries_from_findings(findings)
-            trove_context = self._trove_search(queries) if queries else ""
+            trove_ctx = trove_search_context(
+                queries,
+                retriever=self.retriever,
+                retriever_tool=self.retriever_tool,
+                cap=8,
+            ) if queries else ""
 
             # Stash for later nodes / display
-            state["trove_context"] = trove_context
+            state["trove_context"] = trove_ctx
 
-            # IMPORTANT: pass exactly the variables your YAML declares
             messages = tmpl.format_messages(
                 code=code,
                 context=findings,
-                trove_context=trove_context,
-                msgs=state.get("msgs", []),  # satisfies MessagesPlaceholder if your PromptManager includes it
+                trove_context=trove_ctx,
+                msgs=state.get("msgs", []),  # keep if PromptManager includes a MessagesPlaceholder("msgs")
             )
 
             response = self.llm.invoke(messages)
