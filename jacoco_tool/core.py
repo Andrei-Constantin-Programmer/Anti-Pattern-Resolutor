@@ -32,46 +32,6 @@ class JaCoCoAnalyzer:
         if verbose:
             logger.setLevel(logging.DEBUG)
     
-    def analyze_repository(self, repo_path: str, force: bool = False) -> Dict[str, List[str]]:
-        """
-        Analyze a repository and return files with 100% coverage.
-        
-        Args:
-            repo_path: Path to the repository
-            force: Force re-analysis even if reports exist
-            
-        Returns:
-            Dictionary mapping module names to lists of fully covered files
-        """
-        repo_path = Path(repo_path)
-        
-        if not repo_path.exists():
-            logger.error(f"Repository path does not exist: {repo_path}")
-            return {}
-        
-        if not self._has_java_files(repo_path):
-            logger.info(f"No Java files found in {repo_path}")
-            return {}
-        
-        # Find all modules with build files
-        modules = self._find_modules(repo_path)
-        logger.info(f"Found {len(modules)} modules in {repo_path.name}")
-        
-        results = {}
-        
-        for module_path in modules:
-            module_name = self._get_module_name(repo_path, module_path)
-            logger.info(f"Processing module: {module_name}")
-            
-            if self._run_jacoco_for_module(module_path, force):
-                covered_files = self._extract_100_percent_files(module_path, repo_path)
-                if covered_files:
-                    results[module_name] = covered_files
-                    logger.info(f"Found {len(covered_files)} files with 100% coverage in {module_name}")
-            else:
-                logger.warning(f"JaCoCo analysis failed for module: {module_name}")
-        
-        return results
     
     def _find_modules(self, repo_path: Path) -> List[Path]:
         """Find all Maven/Gradle modules in the repository."""
@@ -402,6 +362,47 @@ test.finalizedBy jacocoTestReport
         
         return None
 
+    def analyze_repository(self, repo_path: str, force: bool = False) -> Dict[str, List[str]]:
+        """
+        Analyze a repository and return files with 100% coverage.
+        
+        Args:
+            repo_path: Path to the repository
+            force: Force re-analysis even if reports exist
+            
+        Returns:
+            Dictionary mapping module names to lists of fully covered files
+        """
+        repo_path = Path(repo_path)
+        
+        if not repo_path.exists():
+            logger.error(f"Repository path does not exist: {repo_path}")
+            return {}
+        
+        if not self._has_java_files(repo_path):
+            logger.info(f"No Java files found in {repo_path}")
+            return {}
+        
+        # Find all modules with build files
+        modules = self._find_modules(repo_path)
+        logger.info(f"Found {len(modules)} modules in {repo_path.name}")
+        
+        results = {}
+        
+        for module_path in modules:
+            module_name = self._get_module_name(repo_path, module_path)
+            logger.info(f"Processing module: {module_name}")
+            
+            if self._run_jacoco_for_module(module_path, force):
+                covered_files = self._extract_100_percent_files(module_path, repo_path)
+                if covered_files:
+                    results[module_name] = covered_files
+                    logger.info(f"Found {len(covered_files)} files with 100% coverage in {module_name}")
+            else:
+                logger.warning(f"JaCoCo analysis failed for module: {module_name}")
+        
+        return results
+
 
 def analyze_repositories(clone_root: str, **kwargs) -> Dict[str, Dict[str, List[str]]]:
     """
@@ -472,5 +473,6 @@ def export_results(results: Dict[str, Dict[str, List[str]]], output_dir: str = "
         
         logger.info(f"Exported {len(set(all_files))} total files with 100% coverage")
         return str(combined_file)
-    
-    return ""
+    else:
+        logger.info("No files with 100% coverage found across all repositories")
+        return ""
