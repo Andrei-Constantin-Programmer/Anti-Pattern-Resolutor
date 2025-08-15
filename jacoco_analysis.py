@@ -9,9 +9,9 @@ Clean, generalized workflow for:
 4. Preparing filtered files for anti-pattern analysis
 
 Usage:
-    python jacoco_workflow.py --repos repos.txt
-    python jacoco_workflow.py --repos repos.txt --force-jacoco
-    python jacoco_workflow.py --single-repo https://github.com/user/repo
+    python jacoco_analysis.py --repos repos.txt
+    python jacoco_analysis.py --repos repos.txt --force-jacoco
+    python jacoco_analysis.py --single-repo https://github.com/user/repo
 """
 
 import argparse
@@ -84,7 +84,7 @@ def main():
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
     
-    logger.info("=== Legacy Code Migration with JaCoCo Integration ===")
+    logger.info("=== JaCoCo Tool Analysis ===")
     
     # Step 1: Clone repositories
     logger.info("Step 1: Cloning repositories...")

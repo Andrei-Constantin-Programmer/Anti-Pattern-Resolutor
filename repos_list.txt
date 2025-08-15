@@ -1,3 +1,2 @@
 https://github.com/apache/commons-lang
 https://github.com/apache/commons-collections
-https://github.com/apache/druid

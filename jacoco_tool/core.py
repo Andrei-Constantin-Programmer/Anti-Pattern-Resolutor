@@ -138,7 +138,7 @@ class JaCoCoAnalyzer:
             content = pom_file.read_text(encoding='utf-8')
             
             # Check if JaCoCo is already configured
-            if 'jacoco-maven-plugin' in content:
+            if 'jacoco' in content:
                 logger.debug(f"JaCoCo already configured in {module_path.name}")
                 return True
             
