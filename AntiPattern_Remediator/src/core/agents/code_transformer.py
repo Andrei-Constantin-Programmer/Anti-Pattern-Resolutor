@@ -15,21 +15,21 @@ class CodeTransformer:
 
     def transform_code(self, state: AgentState) -> AgentState:
         print("--- TRANSFORMING CODE ---")
-        original_code = state.get("code")
-        strategy = state.get("refactoring_strategy_results")
-
-        if not strategy:
-            print("No valid strategy received. Skipping transformation.")
-            state["refactored_code"] = "Transformation skipped due to missing strategy."
-            return state
-
-        print("Strategy received, proceeding with transformation.")
-
         try:
-            prompt_template = self.prompt_manager.get_prompt(self.prompt_manager.CODE_TRANSFORMER)
-            
-            # Get historical messages from state, or use empty list if none exist
+            original_code = state.get("code")
+            strategy = state.get("refactoring_strategy_results")
             msgs = state.get('msgs', [])
+            
+            if not strategy:
+                print("No valid strategy received. Skipping transformation.")
+                state["refactored_code"] = "Transformation skipped due to missing strategy."
+                raise ValueError("No valid strategy received for code transformation.")
+            else:
+                print("Strategy received, proceeding with transformation.")
+            if msgs != []:
+                print(f"{len(msgs)} Code Review messages received, proceeding with transformation.")
+
+            prompt_template = self.prompt_manager.get_prompt(self.prompt_manager.CODE_TRANSFORMER)
 
             formatted_messages = prompt_template.format_messages(
                 strategy=strategy,
@@ -38,6 +38,11 @@ class CodeTransformer:
             )
             
             response = self.llm.invoke(formatted_messages)
+            if response.content is None or response.content == "":
+                print(Fore.RED + "Error: No valid response received from LLM." + Style.RESET_ALL)
+                print(formatted_messages)
+                state["refactored_code"] = "Error: No valid response received from LLM."
+                raise ValueError("No valid response received from LLM.")
             refactored_code = response.content.strip()
 
             print(Fore.GREEN + "Code transformation complete." + Style.RESET_ALL)

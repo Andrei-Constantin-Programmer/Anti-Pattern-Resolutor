@@ -6,12 +6,13 @@ from langgraph.graph import StateGraph, END
 from langchain.tools.retriever import create_retriever_tool
 
 from config.settings import settings
+from .conditional_edges import ConditionalEdges
 from ..llm_models import LLMCreator
 from ..state import AgentState
 from ..agents import AntipatternScanner
 from ..agents import RefactorStrategist
 from ..agents import CodeTransformer
-from ..prompt import PromptManager
+from ..agents import CodeReviewerAgent
 
 # Imports for LangSmith tracing
 import os
@@ -27,7 +28,8 @@ class CreateGraph:
         llm_model = llm_model or settings.LLM_MODEL
         self.llm = LLMCreator.create_llm(
             provider=settings.LLM_PROVIDER,
-            model_name=settings.LLM_MODEL
+            model_name=settings.LLM_MODEL,
+            **settings.parameters
          )
                 
         # LangSmith integration
@@ -53,6 +55,7 @@ class CreateGraph:
 
         self.db_manager = db_manager
         self.prompt_manager = prompt_manager
+        self.conditional_edges = ConditionalEdges()
         retriever = self.db_manager.as_retriever()
         retriever_tool = create_retriever_tool(
             retriever,
@@ -63,7 +66,8 @@ class CreateGraph:
         self.agents = {
             'scanner': AntipatternScanner(retriever_tool, self.llm, self.prompt_manager),
             'strategist': RefactorStrategist(self.llm, self.prompt_manager),
-            'transformer': CodeTransformer(self.llm, self.prompt_manager)
+            'transformer': CodeTransformer(self.llm, self.prompt_manager),
+            'reviewer': CodeReviewerAgent(self.llm, self.prompt_manager),
         }
         self.workflow = self._build_graph()
     
@@ -83,6 +87,9 @@ class CreateGraph:
         graph.add_node("transform_code", self.agents['transformer'].transform_code)
         graph.add_node("display_transformed_code", self.agents['transformer'].display_transformed_code)
 
+        graph.add_node("review_code", self.agents['reviewer'].review_code)
+        graph.add_node("display_code_review_results", self.agents['reviewer'].display_code_review_results)
+
         graph.set_entry_point("retrieve_context")
         graph.add_edge("retrieve_context", "analyze_antipatterns")
         graph.add_edge("analyze_antipatterns", "display_antipatterns_results")
@@ -90,6 +97,15 @@ class CreateGraph:
         graph.add_edge("strategize_refactoring", "display_refactoring_results")
         graph.add_edge("display_refactoring_results", "transform_code")
         graph.add_edge("transform_code", "display_transformed_code")
-        graph.add_edge("display_transformed_code", END)
+        graph.add_edge("display_transformed_code", "review_code")
+        graph.add_conditional_edges(
+            "review_code",
+            self.conditional_edges.code_review_condition,
+            {
+                "transform_code": "transform_code",
+                "pass": "display_code_review_results",
+            },
+        )
+        graph.add_edge("display_code_review_results", END)
 
         return graph.compile()

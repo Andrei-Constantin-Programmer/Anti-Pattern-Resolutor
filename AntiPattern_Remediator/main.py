@@ -2,7 +2,6 @@
 """
 Main entry point - Legacy Code Migration Tool
 """
-from src.core.prompt import PromptManager
 from config.settings import initialize_settings
 # from scripts import seed_database
 from dotenv import load_dotenv
@@ -30,6 +29,7 @@ def main():
     # Temporary Lazy Imports
     from src.core.graph import CreateGraph
     from src.data.database import VectorDBManager, TinyDBManager
+    from src.core.prompt import PromptManager
     from scripts import seed_database
     
     # Initialize PromptManager
@@ -80,6 +80,9 @@ def main():
         "antipatterns_scanner_results": None,
         "refactoring_strategy_results": None,
         "refactored_code": None,
+        "code_review_results": None,
+        "code_review_times": 0,
+        "msgs": [],
         "answer": None
     }
 
@@ -102,7 +105,7 @@ def main():
     print(f"Context retrieved: {'Yes' if final_state.get('context') else 'No'}")
     print(f"Analysis completed: {'Yes' if final_state.get('antipatterns_scanner_results') else 'No'}")
     print(f"Refactored code: {'Yes' if final_state.get('refactored_code') else 'No'}")
-
+    print(f"Code review results: {final_state.get('code_review_times')}")
 
 if __name__ == "__main__":
     main()
