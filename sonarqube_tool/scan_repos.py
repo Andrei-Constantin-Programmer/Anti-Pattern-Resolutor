@@ -14,7 +14,8 @@ def _setup_properties(token, repo_dir, project_key):
 sonar.projectKey={project_key}
 sonar.projectName={repo_dir.name}
 sonar.projectVersion=1.0
-sonar.sources=.
+sonar.sources=src/main/java
+sonar.java.binaries=target/classes
 sonar.host.url={SONARQUBE_URL}
 sonar.token={token}
 """.strip()
@@ -22,6 +23,45 @@ sonar.token={token}
     properties_file.write_text(properties)
     return properties_file
 
+def _compile_java_sources(repo_dir):
+    """
+    Compile Java sources using Maven, supporting both Windows and Linux.
+    Skips Apache RAT license checking with -Drat.skip=true.
+    """
+    print(f"Compiling Java sources for {repo_dir.name}...")
+    
+    # Check if it's a Maven project
+    pom_file = repo_dir / "pom.xml"
+    if not pom_file.exists():
+        print(f"No pom.xml found in {repo_dir.name}, skipping compilation.")
+        return
+    
+    try:
+        # Determine the Maven command based on platform
+        if platform.system() == "Windows":
+            maven_cmd = ["mvn.cmd", "clean", "compile", "-Drat.skip=true"]
+        else:
+            maven_cmd = ["mvn", "clean", "compile", "-Drat.skip=true"]
+        
+        # Run Maven compilation
+        result = subprocess.run(
+            maven_cmd,
+            cwd=repo_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=True
+        )
+        print(f"Successful! Compilation successful for {repo_dir.name}")
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error: Compilation failed for {repo_dir.name}: {e}")
+        print(f"Maven output: {e.stdout}")
+    except FileNotFoundError:
+        print(f"Error: Maven not found in PATH. Please install Maven to compile {repo_dir.name}")
+    except Exception as e:
+        print(f"Error: Unexpected error during compilation of {repo_dir.name}: {e}")
+    
 
 def _scan_repo(repo_dir, token, force_scan):
     project_key = repo_dir.name.replace(" ", "_")
@@ -32,6 +72,9 @@ def _scan_repo(repo_dir, token, force_scan):
         return
 
     properties_file = _setup_properties(token, repo_dir, project_key)
+
+    # Compile Java sources before scanning, defaulting to Maven
+    _compile_java_sources(repo_dir)
 
     print(f"Running SonarQube on {repo_dir.name}...")
 
