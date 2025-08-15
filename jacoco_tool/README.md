@@ -25,8 +25,8 @@ The JaCoCo tool follows a three-step process:
 python jacoco_analysis.py --single-repo https://github.com/apache/commons-lang
 
 # Process multiple repositories from a file
-python jacoco_analysis.py --repos repos_list.txt
+python jacoco_analysis.py --repos repos.txt
 
 # Force JaCoCo analysis even if reports already exist and enable verbose logging  
-python jacoco_analysis.py --repos repos_list.txt --force-jacoco --verbose
+python jacoco_analysis.py --repos repos.txt --force-jacoco --verbose
 ```

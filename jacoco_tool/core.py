@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 import logging
+from colorama import Fore, Style
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -88,6 +89,7 @@ class JaCoCoAnalyzer:
             return self._run_gradle_jacoco(module_path)
         else:
             logger.warning(f"No build file found in {module_path}")
+            print(Fore.YELLOW + f"No build file found in {module_path.name}" + Style.RESET_ALL)
             return False
     
     def _setup_jacoco_maven(self, module_path: Path) -> bool:
@@ -159,6 +161,7 @@ class JaCoCoAnalyzer:
             
         except Exception as e:
             logger.error(f"Failed to setup JaCoCo in Maven: {e}")
+            print(Fore.RED + f"Error setting up JaCoCo in {module_path.name}: {e}" + Style.RESET_ALL)
             return False
     
     def _setup_jacoco_gradle(self, module_path: Path) -> bool:
@@ -169,6 +172,7 @@ class JaCoCoAnalyzer:
         
         if not build_file:
             logger.warning(f"No Gradle build file found in {module_path}")
+            print(Fore.YELLOW + f"No Gradle build file found in {module_path.name}" + Style.RESET_ALL)
             return False
         
         try:
@@ -207,6 +211,7 @@ test.finalizedBy jacocoTestReport
             
         except Exception as e:
             logger.error(f"Failed to setup JaCoCo in Gradle: {e}")
+            print(Fore.RED + f"Error setting up JaCoCo in {module_path.name}: {e}" + Style.RESET_ALL)
             return False
     
     def _run_maven_jacoco(self, module_path: Path) -> bool:
@@ -220,9 +225,12 @@ test.finalizedBy jacocoTestReport
             f"{mvn_cmd} clean test jacoco:report -DfailIfNoTests=false -q",
         ]
         
+        strategy_errors = []
+        
         for strategy in strategies:
             try:
-                logger.debug(f"Trying: {strategy}")
+                logger.info(f"Trying Maven strategy: {strategy}")
+                
                 result = subprocess.run(
                     strategy.split(),
                     cwd=module_path,
@@ -235,14 +243,40 @@ test.finalizedBy jacocoTestReport
                 if result.returncode == 0:
                     jacoco_xml = module_path / "target" / "site" / "jacoco" / "jacoco.xml"
                     if jacoco_xml.exists():
-                        logger.debug(f"Maven JaCoCo successful for {module_path.name}")
+                        logger.info(f"Maven JaCoCo successful for {module_path.name}")
+                        print(Fore.GREEN + f"Maven JaCoCo successful for {module_path.name}" + Style.RESET_ALL)
                         return True
+                    else:
+                        error_msg = f"Maven build succeeded but JaCoCo XML not found at {jacoco_xml}"
+                        logger.warning(error_msg)
+                        print(Fore.YELLOW + f"{error_msg}" + Style.RESET_ALL)
+                        strategy_errors.append(f"{strategy}: {error_msg}")
+                else:
+                    error_msg = f"Maven build failed (exit code {result.returncode})"
+                    if result.stderr:
+                        error_msg += f"\nSTDERR: {result.stderr.strip()[:500]}..."
+                    if result.stdout:
+                        error_msg += f"\nSTDOUT: {result.stdout.strip()[:500]}..."
+                    logger.error(f"Failed to run Maven command for {module_path.name}")
+                    print(Fore.RED + f"{error_msg}" + Style.RESET_ALL)
+                    strategy_errors.append(f"{strategy}: {error_msg}")
                     
             except subprocess.TimeoutExpired:
-                logger.warning(f"Maven timeout for {module_path.name}")
+                error_msg = f"Maven timeout after {self.timeout}s for {module_path.name}"
+                logger.error(f"Timeout expired for {module_path.name}")
+                print(Fore.RED + f"{error_msg}" + Style.RESET_ALL)
+                strategy_errors.append(f"{strategy}: {error_msg}")
             except Exception as e:
-                logger.debug(f"Maven strategy failed: {e}")
-                continue
+                error_msg = f"Maven execution failed: {str(e)}"
+                logger.error(f"Failed to run Maven command for {module_path.name}")
+                print(Fore.RED + f"{error_msg}" + Style.RESET_ALL)
+                strategy_errors.append(f"{strategy}: {error_msg}")
+        
+        # all strategies failed
+        # logger.error(f"All Maven strategies failed for {module_path.name}:")
+        print(Fore.RED + f"All Maven strategies failed for {module_path.name}:" + Style.RESET_ALL)
+        # for error in strategy_errors:
+        #     print(Fore.RED + f"  - {error}" + Style.RESET_ALL)
         
         return False
     
@@ -257,9 +291,12 @@ test.finalizedBy jacocoTestReport
             f"{gradle_cmd} test jacocoTestReport",
         ]
         
+        strategy_errors = []
+        
         for strategy in strategies:
             try:
-                logger.debug(f"Trying: {strategy}")
+                logger.info(f"Trying Gradle strategy: {strategy}")
+                
                 result = subprocess.run(
                     strategy.split(),
                     cwd=module_path,
@@ -276,14 +313,40 @@ test.finalizedBy jacocoTestReport
                     ]
                     
                     if any(path.exists() for path in report_paths):
-                        logger.debug(f"Gradle JaCoCo successful for {module_path.name}")
+                        logger.info(f"Gradle JaCoCo successful for {module_path.name}")
+                        print(Fore.GREEN + f"Gradle JaCoCo successful for {module_path.name}" + Style.RESET_ALL)
                         return True
+                    else:
+                        error_msg = f"Gradle build succeeded but JaCoCo XML not found at any expected location"
+                        logger.warning(error_msg)
+                        print(Fore.YELLOW + f"{error_msg}" + Style.RESET_ALL)
+                        strategy_errors.append(f"{strategy}: {error_msg}")
+                else:
+                    error_msg = f"Gradle build failed (exit code {result.returncode})"
+                    if result.stderr:
+                        error_msg += f"\nSTDERR: {result.stderr.strip()[:500]}..."
+                    if result.stdout:
+                        error_msg += f"\nSTDOUT: {result.stdout.strip()[:500]}..."
+                    logger.error(f"Failed to run Gradle command for {module_path.name}")
+                    print(Fore.RED + f"{error_msg}" + Style.RESET_ALL)
+                    strategy_errors.append(f"{strategy}: {error_msg}")
                     
             except subprocess.TimeoutExpired:
-                logger.warning(f"Gradle timeout for {module_path.name}")
+                error_msg = f"Gradle timeout after {self.timeout}s for {module_path.name}"
+                logger.error(f"Timeout expired for {module_path.name}")
+                print(Fore.RED + f"{error_msg}" + Style.RESET_ALL)
+                strategy_errors.append(f"{strategy}: {error_msg}")
             except Exception as e:
-                logger.debug(f"Gradle strategy failed: {e}")
-                continue
+                error_msg = f"Gradle execution failed: {str(e)}"
+                logger.error(f"Failed to run Gradle command for {module_path.name}")
+                print(Fore.RED + f"{error_msg}" + Style.RESET_ALL)
+                strategy_errors.append(f"{strategy}: {error_msg}")
+        
+        # all strategies failed
+        # logger.error(f"All Gradle strategies failed for {module_path.name}:")
+        print(Fore.RED + f"All Gradle strategies failed for {module_path.name}:" + Style.RESET_ALL)
+        # for error in strategy_errors:
+        #     print(Fore.RED + f"  - {error}" + Style.RESET_ALL)
         
         return False
     
@@ -337,9 +400,11 @@ test.finalizedBy jacocoTestReport
             
         except ET.ParseError as e:
             logger.error(f"Failed to parse JaCoCo XML {jacoco_xml}: {e}")
+            print(Fore.RED + f"Error parsing JaCoCo XML in {module_path.name}: {e}" + Style.RESET_ALL)
             return []
         except Exception as e:
             logger.error(f"Error extracting coverage data: {e}")
+            print(Fore.RED + f"Error extracting coverage data in {module_path.name}: {e}" + Style.RESET_ALL)
             return []
     
     def _find_java_file(self, module_path: Path, package_name: str, filename: str) -> Optional[Path]:
@@ -384,6 +449,7 @@ test.finalizedBy jacocoTestReport
         
         if not repo_path.exists():
             logger.error(f"Repository path does not exist: {repo_path}")
+            print(Fore.RED + f"Repository path does not exist: {repo_path}" + Style.RESET_ALL)
             return {}
         
         if not self._has_java_files(repo_path):
@@ -395,6 +461,7 @@ test.finalizedBy jacocoTestReport
         logger.info(f"Found {len(modules)} modules in {repo_path.name}")
         
         results = {}
+        failed_modules = []
         
         for module_path in modules:
             module_name = self._get_module_name(repo_path, module_path)
@@ -405,9 +472,28 @@ test.finalizedBy jacocoTestReport
                 if covered_files:
                     results[module_name] = covered_files
                     logger.info(f"Found {len(covered_files)} files with 100% coverage in {module_name}")
+                    print(Fore.GREEN + f"Found {len(covered_files)} files with 100% coverage in {module_name}" + Style.RESET_ALL)
+                else:
+                    logger.warning(f"JaCoCo analysis completed but no files with 100% coverage found in {module_name}")
+                    print(Fore.YELLOW + f"JaCoCo analysis completed but no files with 100% coverage found in {module_name}" + Style.RESET_ALL)
             else:
-                logger.warning(f"JaCoCo analysis failed for module: {module_name}")
+                logger.error(f"JaCoCo analysis failed for module: {module_name}")
+                print(Fore.RED + f"JaCoCo analysis failed for module: {module_name}" + Style.RESET_ALL)
+                failed_modules.append(module_name)
         
+        # Summary logging
+        if failed_modules:
+            logger.warning(f"JaCoCo analysis failed for {len(failed_modules)} modules: {', '.join(failed_modules)}")
+            print(Fore.YELLOW + f"Summary: JaCoCo analysis failed for {len(failed_modules)} modules: {', '.join(failed_modules)}" + Style.RESET_ALL)
+        
+        if results:
+            total_files = sum(len(files) for files in results.values())
+            logger.info(f"Successfully analyzed {len(results)} modules with {total_files} total files having 100% coverage")
+            print(Fore.GREEN + f"Successfully analyzed {len(results)} modules with {total_files} total files having 100% coverage" + Style.RESET_ALL)
+        else:
+            logger.warning(f"No files with 100% coverage found in repository {repo_path.name}")
+            print(Fore.YELLOW + f"No files with 100% coverage found in repository {repo_path.name}" + Style.RESET_ALL)
+
         return results
 
 
@@ -425,6 +511,7 @@ def analyze_repositories(clone_root: str, **kwargs) -> Dict[str, Dict[str, List[
     clone_path = Path(clone_root)
     if not clone_path.exists():
         logger.error(f"Clone root does not exist: {clone_root}")
+        print(Fore.RED + f"Clone root does not exist: {clone_root}" + Style.RESET_ALL)
         return {}
     
     analyzer = JaCoCoAnalyzer(**kwargs)
