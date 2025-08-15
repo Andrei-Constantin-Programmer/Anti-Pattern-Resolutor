@@ -211,10 +211,13 @@ test.finalizedBy jacocoTestReport
     
     def _run_maven_jacoco(self, module_path: Path) -> bool:
         """Run Maven JaCoCo analysis."""
+        # Use .cmd extension for Windows compatibility
+        mvn_cmd = "mvn.cmd" if os.name == "nt" else "mvn"
+
         strategies = [
-            "mvn clean test jacoco:report -q",
-            "mvn clean compile test-compile jacoco:report -DskipTests=true -q",
-            "mvn clean test jacoco:report -DfailIfNoTests=false -q",
+            f"{mvn_cmd} clean test jacoco:report -q",
+            f"{mvn_cmd} clean compile test-compile jacoco:report -DskipTests=true -q",
+            f"{mvn_cmd} clean test jacoco:report -DfailIfNoTests=false -q",
         ]
         
         for strategy in strategies:
@@ -245,9 +248,13 @@ test.finalizedBy jacocoTestReport
     
     def _run_gradle_jacoco(self, module_path: Path) -> bool:
         """Run Gradle JaCoCo analysis."""
+        # Use .bat extension for Windows compatibility
+        gradlew_cmd = "./gradlew.bat" if os.name == "nt" else "./gradlew"
+        gradle_cmd = "gradle.bat" if os.name == "nt" else "gradle"
+        
         strategies = [
-            "./gradlew test jacocoTestReport",
-            "gradle test jacocoTestReport",
+            f"{gradlew_cmd} test jacocoTestReport",
+            f"{gradle_cmd} test jacocoTestReport",
         ]
         
         for strategy in strategies:

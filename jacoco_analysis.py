@@ -91,16 +91,32 @@ def main():
     clone_dir = Path(args.clone_dir)
     clone_dir.mkdir(exist_ok=True)
     
+    # Track which repositories to analyze (only the ones cloned in this run)
+    repos_to_analyze = []
+    
     try:
         if args.repos:
             if not os.path.exists(args.repos):
                 logger.error(f"Repository list file not found: {args.repos}")
                 return 1
             
+            # Read repository URLs from file to get repo names
+            with open(args.repos, 'r') as f:
+                repo_urls = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+            
+            # Extract repo names from URLs
+            for url in repo_urls:
+                repo_name = url.split('/')[-1].replace('.git', '')
+                repos_to_analyze.append(repo_name)
+            
             clone_repos_from_file(args.repos, str(clone_dir))
             logger.info(f"Cloned repositories from {args.repos}")
             
         elif args.single_repo:
+            # Extract repo name from URL
+            repo_name = args.single_repo.split('/')[-1].replace('.git', '')
+            repos_to_analyze.append(repo_name)
+            
             clone_repo(args.single_repo, str(clone_dir))
             logger.info(f"Cloned repository: {args.single_repo}")
             
@@ -114,12 +130,16 @@ def main():
         analyzer = JaCoCoAnalyzer(timeout=args.timeout, verbose=args.verbose)
         results = {}
         
-        for repo_dir in clone_dir.iterdir():
-            if repo_dir.is_dir() and not repo_dir.name.startswith('.'):
-                logger.info(f"Analyzing repository: {repo_dir.name}")
+        # Only analyze the repositories that were specified for this run
+        for repo_name in repos_to_analyze:
+            repo_dir = clone_dir / repo_name
+            if repo_dir.is_dir():
+                logger.info(f"Analyzing repository: {repo_name}")
                 repo_results = analyzer.analyze_repository(str(repo_dir), force=args.force_jacoco)
                 if repo_results:
-                    results[repo_dir.name] = repo_results
+                    results[repo_name] = repo_results
+            else:
+                logger.warning(f"Repository directory not found: {repo_dir}")
         
         if not results:
             logger.warning("No coverage results found. Ensure repositories contain Java projects with tests.")
