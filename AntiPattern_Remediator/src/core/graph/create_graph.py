@@ -6,6 +6,7 @@ from langgraph.graph import StateGraph, END
 from langchain.tools.retriever import create_retriever_tool
 
 from config.settings import settings
+from src.core.prompt.prompt_manager import PromptManager
 from .conditional_edges import ConditionalEdges
 from ..llm_models import LLMCreator
 from ..state import AgentState
