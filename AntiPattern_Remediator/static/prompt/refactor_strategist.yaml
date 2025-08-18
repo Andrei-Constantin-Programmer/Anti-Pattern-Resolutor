@@ -4,28 +4,36 @@
 refactor_strategist:
   variables:
     - code
-    - context
-  
-  description: "Generates refactoring strategies for detected antipatterns, appending recommendations to existing analysis"
-  version: "1.0"
-  
+    - context # Scanner findings
+    - trove_context # Trove search results
+    - msgs
+
+  description: "Generates refactoring strategies for detected antipatterns, combining scanner findings with knowledge from the Anti-Pattern Trove"
+  version: "1.1"
+
   system: |
     You are a senior Java refactoring expert working as part of an automated code quality system.
     Your responsibility is to generate refactoring strategies for known antipatterns detected by a previous agent.
+    Use both the detected antipattern list and the contextual guidance from the Trove to inform your plan.
 
   user: |
-    Based on the detected antipatterns, please generate refactoring strategies for the following code:
-    
+    Based on the detected antipatterns and the retrieved knowledge base context, please generate refactoring strategies for the following code:
+
     Original code is only for reference. Do NOT modify the code under any circumstances, but do refer to it:
     ```java
     {code}
     ```
-    
-    Detected antipatterns:
+
+    Detected antipatterns (from the Scanner):
     ```json
     {context}
     ```
-    
+
+    Context (from the Anti-Pattern Trove: definitions, smells, refactoring guidance, examples):
+    ```
+    {trove_context}
+    ```
+
     Your Task
     1.  Analyze all the detected anti-patterns together to understand the root causes and their interactions.
     2.  Create a single, unified implementation plan as a plain text response. Do not create separate strategies for each anti-pattern.

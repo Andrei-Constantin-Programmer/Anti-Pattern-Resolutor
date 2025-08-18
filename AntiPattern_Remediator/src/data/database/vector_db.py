@@ -21,11 +21,11 @@ class VectorDBManager:
             embedding_function=self.embedding,
             persist_directory=self.persist_dir
         )
-    
+
     def get_db(self):
         """
         Get the vector database instance.
-        
+
         Returns:
             Chroma: The vector database instance.
         """
@@ -34,7 +34,7 @@ class VectorDBManager:
     def add_documents(self, documents):
         """
         Add documents to the vector database.
-        
+
         Args:
             documents: List of documents to add.
         """
@@ -44,3 +44,6 @@ class VectorDBManager:
             print("Documents added successfully.")
         except Exception as e:
             print(f"Error adding documents: {e}")
+
+    def as_retriever(self):
+        return self.db.as_retriever()

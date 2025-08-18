@@ -31,7 +31,7 @@ def main():
     from src.data.database import VectorDBManager, TinyDBManager
     from src.core.prompt import PromptManager
     from scripts import seed_database
-    
+
     # Initialize PromptManager
     print("Initializing PromptManager...")
     prompt_manager = PromptManager()
@@ -77,6 +77,7 @@ def main():
     initial_state = {
         "code": legacy_code,
         "context": None,
+        "trove_context": None,
         "antipatterns_scanner_results": None,
         "refactoring_strategy_results": None,
         "refactored_code": None,
@@ -97,7 +98,8 @@ def main():
         db_manager = vector_db.get_db()
         print("Using ChromaDB for knowledge retreival")
 
-    langgraph = CreateGraph(db_manager, prompt_manager).workflow
+    retriever = db_manager.as_retriever()
+    langgraph = CreateGraph(db_manager, prompt_manager, retriever=retriever).workflow
     final_state = langgraph.invoke(initial_state)
 
     print(Fore.GREEN + f"\nAnalysis Complete!" + Style.RESET_ALL)
