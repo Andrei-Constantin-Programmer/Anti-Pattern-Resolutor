@@ -2,6 +2,7 @@ from pathlib import Path
 import platform
 import shutil
 import subprocess
+from .sonarqube_api import SonarQubeAPI
 
 SONARQUBE_URL = "http://localhost:9000"
 SONARQUBE_FILE_NAME = "sonarqube_output.txt"
@@ -28,13 +29,19 @@ def _compile_java_sources(repo_dir):
     Compile Java sources using Maven, supporting both Windows and Linux.
     Skips Apache RAT license checking with -Drat.skip=true.
     """
-    print(f"Compiling Java sources for {repo_dir.name}...")
-    
     # Check if it's a Maven project
     pom_file = repo_dir / "pom.xml"
     if not pom_file.exists():
         print(f"No pom.xml found in {repo_dir.name}, skipping compilation.")
         return
+    
+    # Check if already compiled (target directory exists)
+    target_dir = repo_dir / "target"
+    if target_dir.exists():
+        print(f"Target directory already exists for {repo_dir.name}, skipping compilation.")
+        return
+    
+    print(f"Compiling Java sources for {repo_dir.name}...")
     
     try:
         # Determine the Maven command based on platform
@@ -91,6 +98,11 @@ def _scan_repo(repo_dir, token, force_scan):
         )
         output_file.write_text(result.stdout)
         print(f"Scan complete. Output saved to {output_file}")
+        api = SonarQubeAPI()
+        if api.is_scan_successful(project_key):
+            issues_path = repo_dir / "issues.json"
+            api.save_all_issues(project_key, issues_path)
+            print(f"All issues saved for {repo_dir.name}.")
     except subprocess.CalledProcessError as e:
         print(f"SonarQube scan failed for {repo_dir.name}: {e}")
         output_file.write_text(e.stdout or "No output captured.")
