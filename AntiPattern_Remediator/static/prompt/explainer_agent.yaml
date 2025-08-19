@@ -12,9 +12,10 @@ explainer_agent:
     - refactor_rationale
     - language
     - context
+    - antipatterns_json   # <-- NEW
 
   description: "Explains the rationale behind refactoring a detected antipattern, highlighting what was changed and the resulting benefits."
-  version: "1.0"
+  version: "1.1"
 
   system: |
     You are a senior software engineer and mentor with deep expertise in code quality, refactoring, and software design principles.
@@ -28,7 +29,10 @@ explainer_agent:
     Language: {language}
     Context: {context}
 
-    Detected Antipattern:
+    ### All Detected Antipatterns (JSON Summary):
+    {antipatterns_json}
+
+    ### Headline Antipattern (focus of this explanation):
     Name: {antipattern_name}
     Description: {antipattern_description}
 
@@ -53,6 +57,7 @@ explainer_agent:
     - Why these changes improve the code compared to the original.
     - Which software design principles or best practices were applied.
     - Any trade-offs made or further improvements possible.
+    - (Optional) How this refactor impacts the other detected antipatterns from the summary.
 
     Response Format:
     ```json

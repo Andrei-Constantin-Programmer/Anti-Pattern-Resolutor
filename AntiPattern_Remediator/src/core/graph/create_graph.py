@@ -137,9 +137,10 @@ class CreateGraph:
         graph.add_edge("display_refactoring_results", "transform_code")
         graph.add_edge("transform_code", "display_transformed_code")
 
-        # Route to explainer before END
+        # Route to explainer before END (linear path only to avoid concurrent writes)
         graph.add_edge("display_transformed_code", "prepare_explainer_inputs")
         graph.add_edge("prepare_explainer_inputs", "explain_antipattern")
+        # (removed) graph.add_edge("display_transformed_code", "explain_antipattern")
         graph.add_edge("explain_antipattern", "display_explanation")
         graph.add_edge("display_explanation", END)
 
