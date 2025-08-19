@@ -25,6 +25,16 @@ def mock_which():
     with patch("sonarqube_tool.scan_repos.shutil.which", return_value="/usr/bin/sonar-scanner"):
         yield
 
+# Mock SonarQubeAPI to avoid requiring real tokens in tests
+@pytest.fixture
+def mock_sonarqube_api():
+    with patch("sonarqube_tool.scan_repos.SonarQubeAPI") as mock_api:
+        mock_instance = MagicMock()
+        mock_instance.is_scan_successful.return_value = True
+        mock_instance.save_all_issues.return_value = None
+        mock_api.return_value = mock_instance
+        yield mock_api
+
 
 def test_scan_repos_skips_if_sonar_scanner_missing(tmp_path):
     # Arrange
@@ -75,10 +85,11 @@ def test_scan_repos_skips_repo_if_output_exists(tmp_path, mock_which, mock_subpr
     mock_subprocess_success.assert_not_called()
 
 
-def test_scan_repos_runs_repo_and_writes_output(tmp_path, mock_which, mock_subprocess_success):
+def test_scan_repos_runs_repo_and_writes_output(tmp_path, mock_which, mock_subprocess_success, mock_sonarqube_api):
     # Arrange
     _ = mock_which
     _ = mock_subprocess_success
+    _ = mock_sonarqube_api
     repo = tmp_path / "repo1"
     repo.mkdir()
 
@@ -109,10 +120,11 @@ def test_scan_repos_handles_scan_failure(tmp_path, mock_which, mock_subprocess_f
     assert not (repo / PROPERTIES_FILE_NAME).exists()
 
 
-def test_scan_repos_runs_multiple_repos(tmp_path, mock_which, mock_subprocess_success):
+def test_scan_repos_runs_multiple_repos(tmp_path, mock_which, mock_subprocess_success, mock_sonarqube_api):
     # Arrange
     _ = mock_which
     _ = mock_subprocess_success
+    _ = mock_sonarqube_api
     repo1 = tmp_path / "repo1"
     repo2 = tmp_path / "repo2"
     repo1.mkdir()
@@ -127,9 +139,10 @@ def test_scan_repos_runs_multiple_repos(tmp_path, mock_which, mock_subprocess_su
         assert "scan succeeded" in (repo / SONARQUBE_FILE_NAME).read_text()
 
 
-def test_scan_repos_runs_mixed_state_repos(tmp_path, mock_which):
+def test_scan_repos_runs_mixed_state_repos(tmp_path, mock_which, mock_sonarqube_api):
     # Arrange
     _ = mock_which
+    _ = mock_sonarqube_api
     scanned = tmp_path / "scanned"
     unscanned = tmp_path / "success"
     failed = tmp_path / "failure"
