@@ -2,7 +2,7 @@ from pathlib import Path
 import platform
 import shutil
 import subprocess
-from .sonarqube_api import SonarQubeAPI
+from sonarqube_tool.sonarqube_api import SonarQubeAPI
 
 SONARQUBE_URL = "http://localhost:9000"
 SONARQUBE_FILE_NAME = "sonarqube_output.txt"
@@ -98,7 +98,7 @@ def _scan_repo(repo_dir, token, force_scan):
         )
         output_file.write_text(result.stdout)
         print(f"Scan complete. Output saved to {output_file}")
-        api = SonarQubeAPI()
+        api = SonarQubeAPI(token=token)
         if api.is_scan_successful(project_key):
             issues_path = repo_dir / "issues.json"
             api.save_all_issues(project_key, issues_path)
