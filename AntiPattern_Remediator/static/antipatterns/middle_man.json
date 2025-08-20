@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Middle Man",
+    "description": "The Middle Man anti-pattern occurs when a class exists primarily to delegate calls to another class without adding meaningful logic of its own. Essentially, the class acts as a pass-through or proxy, forwarding method calls without adding value. While delegation is sometimes necessary for abstraction, excessive or trivial delegation leads to unnecessary indirection and increases maintenance overhead.",
+    "category": "Uncategorised",
+    "language": "Any",
+    "severity": "MEDIUM",
+    "problem": "Extra Indirection : Code must go through one more layer, which can complicate understanding the code flow.\nIncreased maintenance : When the delegated class changes, the middle-man class often needs updates for all its pass-through methods.\nLow cohesion : The middle-man class has little real logic, making its purpose unclear\nCode bloat : Many trivial delegation methods clutter the class, making it harder to navigate.\nHarder debugging : Tracing behaviour through multiple layers of delegation adds cognitive load.",
+    "remediation": "",
+    "limitation": "Some delegation is unavoidable, e.g., to implement an interface or provide a stable abstraction layer\nRemoving middleman classes may break existing APIs or require refactoring client code.\nIn some cases, delegation is part of a design pattern (like a proxy), which is intentional and not an anti-pattern"
+  }
+]
