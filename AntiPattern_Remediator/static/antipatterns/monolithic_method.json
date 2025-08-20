@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Monolithic Method",
+    "description": "A Monolithic Method is a single method that tries to do too much, often combining unrelated responsibilities into one block of code. This is essentially a method-level violation of the Single Responsibility Principle (SRP). Monolithic methods are hard to read, understand, maintain, and test because they mix business logic, I/O, error handling, and other concerns in one place.",
+    "category": "Uncategorised",
+    "language": "Any",
+    "severity": "MEDIUM",
+    "problem": "Poor maintainability : Modifying one part of the method risks breaking unrelated functionality.\nLow readability : Long, complex methods are hard to follow and understand.\nDifficult testing : Unit tests become cumbersome because the method does too many things at once.\nCode duplication : Reusing logic is difficult; similar tasks often get reimplemented elsewhere.\nTight coupling : Internal details are intertwined, making refactoring risky.",
+    "remediation": "",
+    "limitation": "Refactoring may require changes to public method signatures, especially if other code depends on it.\nSome logic may rely on shared state or multiple services, making it hard to separate without broader architectural changes.\nIf the method handles cross-cutting concerns (e.g., logging, metrics, validation), isolating responsibilities may require AOP or middleware."
+  }
+]

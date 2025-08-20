@@ -1,0 +1,12 @@
+[
+  {
+    "name": "God Class",
+    "description": "A God Class anti-pattern refers to a class that centralises too many responsibilities in a single location, becoming overly complex and difficult to maintain. Such classes tend to know too much, do too much, and interact with many different parts of the system. This leads to tightly coupled code, reduces modularity, and makes the system hard to test and extend.",
+    "category": "Uncategorised",
+    "language": "Any",
+    "severity": "MEDIUM",
+    "problem": "High coupling: God Classes tend to interact with many other classes and modules, thereby reducing system modularity and increasing the risk of changes.\nPoor maintainability : Large, complex classes are difficult to read, understand, and modify.\nLow reusability : The class becomes so specific and bloated that it is rarely useful outside of its original context.\nHidden dependencies : God Classes often hide dependencies within fields or methods, making the codebase less transparent.",
+    "remediation": "",
+    "limitation": ""
+  }
+]

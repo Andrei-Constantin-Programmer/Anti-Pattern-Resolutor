@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Duplicate Code",
+    "description": "Duplicate Code occurs when identical or very similar code blocks are repeated throughout the codebase. This pattern creates maintenance overhead, increases the likelihood of bugs, and violates the DRY (Don't Repeat Yourself) principle. Common examples include repeated null checks, validation logic, and similar conditional patterns across different methods or classes.",
+    "category": "Uncategorised",
+    "language": "Any",
+    "severity": "MEDIUM",
+    "problem": "Maintenance overhead : Changes need to be applied in multiple places, increasing the risk of inconsistencies\nBug multiplication : A bug in duplicated code affects multiple locations, making fixes more complex\nCode bloat : Repeated code increases the overall size of the codebase without adding functionality\nViolation of DRY principle : Makes the code harder to understand and reason about",
+    "remediation": "",
+    "limitation": "Over-abstraction can make code harder to understand if the duplication is minimal or contextually different\nPremature extraction of methods may create unnecessary coupling between unrelated parts of the system\nSome duplication might be acceptable if the code serves different business contexts"
+  }
+]
