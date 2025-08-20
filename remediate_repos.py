@@ -14,8 +14,14 @@ def _resolve_path(base_dir: str, path: str) -> str:
 def main():
     parser = argparse.ArgumentParser(description="Run SonarQube on a list of repositories.")
     parser.add_argument(
-        "token",
-        help="SonarQube token. To get this: run Docker on your PC, then: `docker run -d --name sonarqube -p 9000:9000 sonarqube:community`. Log into 'http://localhost:9000', then My Account > Security, and generate a global analysis token to use."
+        "--token",
+        help="""
+            SonarQube token. If not provided, will read from SONARQUBE_TOKEN environment variable. 
+            To get this: run Docker on your PC, then: `docker run -d --name sonarqube -p 9000:9000 sonarqube:community`. 
+            Use "admin" as the username and the password you set during the setup. 
+            Log into 'http://localhost:9000', then My Account > Security, and generate a "User Token" type token to use. 
+            It will have the necessary permissions for analysis.
+        """
     )
     parser.add_argument(
         "--repos",
@@ -35,13 +41,19 @@ def main():
     )
     args = parser.parse_args()
 
+    # Get token from argument or environment variable
+    token = args.token or os.getenv('SONARQUBE_TOKEN')
+    if not token:
+        print("Error: SonarQube token is required. Provide it via --token argument or set SONARQUBE_TOKEN environment variable.")
+        return
+
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
     repos_file = _resolve_path(base_dir, args.repos)
     clone_dir = _resolve_path(base_dir, args.clone_dir)
 
     clone_repos_from_file(repos_file, clone_dir, post_pull_hook=delete_sonarqube_output_if_updated)
-    scan_repos(args.token, clone_dir, args.force_scan)
+    scan_repos(token, clone_dir, args.force_scan)
 
 
 if __name__ == "__main__":

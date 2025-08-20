@@ -57,6 +57,7 @@ docker-compose.override.yml
 # Intermediate files/output
 repos.txt
 clones/
+jacoco_results/
 
 # Binary files
 *.bin
