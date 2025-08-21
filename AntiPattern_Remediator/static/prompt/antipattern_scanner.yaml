@@ -22,6 +22,10 @@ antipattern_scanner:
     ```java
     {code}
     ```
+    Found issues:
+    ```json
+    {sonarqube_issues}
+    ```
 
     Additional context from codebase:
     {context}
