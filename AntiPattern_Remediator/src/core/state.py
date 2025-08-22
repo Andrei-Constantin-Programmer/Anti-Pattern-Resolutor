@@ -17,3 +17,5 @@ class AgentState(TypedDict):
     code_review_times: int  # Number of times code has been reviewed
     msgs: List[Dict[str, Any]]   # Message history for conversation context
     answer: Optional[str]        # Analysis result
+    explanation_response_raw: Optional[str]  # Raw LLM output from explainer
+    explanation_json: Optional[Dict[str, Any]]  # Parsed JSON explanation

@@ -1,12 +1,11 @@
-
 """
 Main entry point - Legacy Code Migration Tool
 """
 from config.settings import initialize_settings
-# from scripts import seed_database
 from dotenv import load_dotenv
 load_dotenv()
 from colorama import Fore, Style
+
 
 def main():
     """Main function: Run antipattern analysis"""
@@ -18,9 +17,9 @@ def main():
     provider_map = {"1": "ollama", "2": "ibm", "3": "vllm"}
     provider = provider_map.get(choice, "ollama")  # default to ollama
 
-    #Let us choose which DB to interact with
+    # Let us choose which DB to interact with
     print("Choose your trove: 1) ChromaDB (VectorDB) 2) TinyDB (DocumentDB)")
-    db_choice  = input("Choose 1 or 2: ").strip()
+    db_choice = input("Choose 1 or 2: ").strip()
 
     # Initialize global settings with selected provider
     settings = initialize_settings(provider)
@@ -74,6 +73,8 @@ def main():
         }
     }
     """
+
+    # Initial workflow state
     initial_state = {
         "code": legacy_code,
         "context": None,
@@ -84,30 +85,44 @@ def main():
         "code_review_results": None,
         "code_review_times": 0,
         "msgs": [],
-        "answer": None
+        "answer": None,
+
+        # ExplainerAgent fields
+        "explanation_response_raw": None,
+        "explanation_json": None,
     }
 
-    #Setup Database
+    # Setup Database
     if db_choice == "2":
         print("Seeding TinyDB with AntiPattern Dataset")
         seed_database.main()
         db_manager = TinyDBManager()
-        print("Using TinyDB for knowledge retreival")
+        print("Using TinyDB for knowledge retrieval")
     else:
         vector_db = VectorDBManager()
         db_manager = vector_db.get_db()
-        print("Using ChromaDB for knowledge retreival")
+        print("Using ChromaDB for knowledge retrieval")
 
     retriever = db_manager.as_retriever()
     langgraph = CreateGraph(db_manager, prompt_manager, retriever=retriever).workflow
     final_state = langgraph.invoke(initial_state)
 
+    # Final results summary
     print(Fore.GREEN + f"\nAnalysis Complete!" + Style.RESET_ALL)
     print(f"Final state keys: {list(final_state.keys())}")
     print(f"Context retrieved: {'Yes' if final_state.get('context') else 'No'}")
     print(f"Analysis completed: {'Yes' if final_state.get('antipatterns_scanner_results') else 'No'}")
     print(f"Refactored code: {'Yes' if final_state.get('refactored_code') else 'No'}")
     print(f"Code review results: {final_state.get('code_review_times')}")
+
+    # Show explanation from ExplainerAgent
+    if final_state.get("explanation_json"):
+        import json
+        print(Fore.CYAN + "\n=== Explanation (JSON) ===" + Style.RESET_ALL)
+        print(json.dumps(final_state["explanation_json"], indent=2, ensure_ascii=False))
+    else:
+        print(Fore.RED + "\nNo explanation was generated." + Style.RESET_ALL)
+
 
 if __name__ == "__main__":
     main()

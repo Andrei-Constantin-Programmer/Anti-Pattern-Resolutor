@@ -7,27 +7,26 @@ from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 class PromptManager:
     """Manager for handling prompt templates and configurations."""
     def __init__(self):
-        # Prompt key constants, **same as YAML filenames**
+        # Prompt key constants, **same as YAML filenames (without .yaml)**
         self.ANTIPATTERN_SCANNER = "antipattern_scanner"
-        self.REFACTOR_STRATEGIST = "refactor_strategist" 
+        self.REFACTOR_STRATEGIST = "refactor_strategist"
         self.CODE_TRANSFORMER = "code_transformer"
         self.CODE_REVIEWER = "code_reviewer"
+        self.EXPLAINER_AGENT = "explainer" 
 
         self.prompt_directory = settings.PROMPT_DIR
-        # Initialize storage for prompt templates
         self._prompt_cache = {}
-        # Load prompts on initialization
         self._load_all_prompts()
     
     def _load_all_prompts(self) -> None:
         """Load all prompt configurations from YAML files."""
         try:
-            # Get all prompt constants and load corresponding files
             prompt_constants = [
                 self.ANTIPATTERN_SCANNER,
                 self.REFACTOR_STRATEGIST,
                 self.CODE_TRANSFORMER,
                 self.CODE_REVIEWER,
+                self.EXPLAINER_AGENT, 
             ]
             
             for prompt_key in prompt_constants:
@@ -55,12 +54,17 @@ class PromptManager:
                 return
             
             prompt_config = config[prompt_key]
-            # Create ChatPromptTemplate
-            self._prompt_cache[prompt_key] = ChatPromptTemplate([
-                ("system", prompt_config.get('system', '')),
-                ("user", prompt_config.get('user', '')),
-                MessagesPlaceholder("msgs")
-            ])
+
+            # Build messages in (role, content) format
+            messages = []
+            if prompt_config.get("system"):
+                messages.append(("system", prompt_config["system"]))
+            if prompt_config.get("user"):
+                messages.append(("user", prompt_config["user"]))
+            messages.append(MessagesPlaceholder("msgs"))
+
+            # Use the correct constructor
+            self._prompt_cache[prompt_key] = ChatPromptTemplate.from_messages(messages)
             print(f"Loaded prompt '{prompt_key}' from {filename}")
             
         except Exception as e:
@@ -70,5 +74,4 @@ class PromptManager:
         if prompt_key not in self._prompt_cache:
             print(f"Warning: Prompt '{prompt_key}' not found in cache")
             return None
-        
         return self._prompt_cache[prompt_key]
