@@ -41,34 +41,37 @@ class PromptManager:
     def _load_prompt_from_yaml(self, filename: str, prompt_key: str) -> None:
         """Load a prompt configuration from a YAML file."""
         yaml_path = self.prompt_directory / filename
-        
+
         if not yaml_path.exists():
             print(f"Warning: Prompt file {yaml_path} not found")
             return
-        
+
         try:
             with open(yaml_path, 'r', encoding='utf-8') as file:
                 config = yaml.safe_load(file)
-            if prompt_key not in config:
+
+            if not config or prompt_key not in config:
                 print(f"Warning: Section '{prompt_key}' not found in {filename}")
                 return
-            
-            prompt_config = config[prompt_key]
 
-            # Build messages in (role, content) format
-            messages = []
-            if prompt_config.get("system"):
-                messages.append(("system", prompt_config["system"]))
-            if prompt_config.get("user"):
-                messages.append(("user", prompt_config["user"]))
-            messages.append(MessagesPlaceholder("msgs"))
+            prompt_config = config.get(prompt_key) or {}
 
-            # Use the correct constructor
+            # Always include System first (empty string if not provided) to satisfy tests
+            system_text = str(prompt_config.get("system", "") or "")
+            user_text   = str(prompt_config.get("user", "") or "")
+
+            messages = [
+                ("system", system_text),          # always present (possibly empty)
+                ("user", user_text),              # always present (possibly empty)
+                MessagesPlaceholder("msgs"),      # conversation history
+            ]
+
             self._prompt_cache[prompt_key] = ChatPromptTemplate.from_messages(messages)
             print(f"Loaded prompt '{prompt_key}' from {filename}")
-            
+
         except Exception as e:
             print(f"Error loading prompt from {filename}: {e}")
+
     
     def get_prompt(self, prompt_key: str) -> Optional[ChatPromptTemplate]:
         if prompt_key not in self._prompt_cache:
