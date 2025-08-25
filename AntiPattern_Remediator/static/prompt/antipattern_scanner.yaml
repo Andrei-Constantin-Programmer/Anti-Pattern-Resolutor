@@ -5,6 +5,7 @@ antipattern_scanner:
   variables:
     - code
     - context
+    - sonarqube_issues
   
   description: "Analyzes Java code for antipatterns and design issues, providing structured JSON output"
   version: "1.0"
@@ -33,6 +34,7 @@ antipattern_scanner:
     Analysis Requirements:
     - Carefully analyze the code for Java antipatterns and design smells.
     - Base your analysis strictly on the antipattern definitions provided earlier in this conversation. Do not invent new antipatterns.
+    - Consider the provided SonarQube issues as potential indicators of antipatterns.
     - Make sure your results are clear and actionable, so others can know how to address the identified issues.
     - Return your analysis in JSON format with the following structure.
     
