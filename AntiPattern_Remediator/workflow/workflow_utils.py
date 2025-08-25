@@ -19,7 +19,6 @@ def parse_antipattern_results(antipatterns_scanner_results):
     # Try to parse as JSON first
     try:
         if isinstance(antipatterns_scanner_results, str):
-            print(type(antipatterns_scanner_results))
             # Try to extract JSON from the string - improved regex pattern
             # Look for JSON objects containing total_antipatterns_found
             json_pattern = r'\{\s*[^}]*?"total_antipatterns_found"\s*:\s*(\d+)[^}]*?\}'
