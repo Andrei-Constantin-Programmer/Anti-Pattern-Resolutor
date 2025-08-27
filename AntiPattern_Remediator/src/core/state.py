@@ -8,6 +8,7 @@ from typing import TypedDict, Optional, List, Dict, Any
 class AgentState(TypedDict):
     """State definition for passing data through the workflow"""
     code: str                                # Code to be analyzed
+    language: Optional[str]                  # Language of the code (used by ExplainerAgent)
     context: Optional[str]                   # Context retrieved from knowledge base (scanner)
     trove_context: Optional[str]             # Context retrieved from the Anti-Pattern Trove (TinyDB/Chroma)
     antipatterns_scanner_results: Optional[str]
@@ -20,3 +21,6 @@ class AgentState(TypedDict):
     explanation_response_raw: Optional[str]  # Raw LLM output from explainer
     explanation_json: Optional[Dict[str, Any]]  # Parsed JSON explanation
     current_file_path: Optional[str]         # Path to the current file being processed
+
+    explanation_response_raw: Optional[str]      # Raw LLM output from explainer
+    explanation_json: Optional[Dict[str, Any]]   # Parsed JSON explanation

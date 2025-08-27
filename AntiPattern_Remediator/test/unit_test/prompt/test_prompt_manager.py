@@ -583,7 +583,7 @@ class TestPromptLoadingIntegration:
                 },
                 'explainer.yaml': {
                     'explainer': {
-                        'system': 'You are a senior software reviewer.',
+                        'system': 'You are a senior software code explainer.',
                         'user': 'Explain: {code}\nLang: {language}\nCtx: {context}'
                     }
                 }
