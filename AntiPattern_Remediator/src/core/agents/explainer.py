@@ -9,6 +9,7 @@ import json
 
 from langchain_core.language_models import BaseLanguageModel
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import PromptTemplate
 from ..prompt import PromptManager
 from src.core.utils import extract_first_json
 
@@ -35,12 +36,10 @@ class ExplainerAgent:
         """Generate explanation JSON for detected antipatterns and refactor."""
         kwargs = dict(
             code=state.get("code", ""),
-            language=state.get("language", "Java"),
             context=state.get("context", ""),
             refactored_code=state.get("refactored_code", ""),
-            refactor_rationale=state.get("refactor_rationale", ""),
-            antipattern_name=state.get("antipattern_name", "Unknown antipattern"),
-            antipattern_description=state.get("antipattern_description", ""),
+            refactoring_strategy=state.get("refactoring_strategy_results", ""),
+            antipattern_name=state.get("antipatterns_scanner_results", "Unknown antipattern"),
             antipatterns_json=json.dumps(state.get("antipatterns_json", []), ensure_ascii=False),
             msgs=state.get("msgs", []),
         )
@@ -70,7 +69,7 @@ class ExplainerAgent:
             "explanation_response_raw": raw,
             "explanation_json": exp_json,
         }
-        # ✅ Return FULL state but with 'code' removed to avoid LastValue collision
+        # Return FULL state but with 'code' removed to avoid LastValue collision
         return self._merge_return_state(state, updates, drop_keys=("code",))
 
     def display_explanation(self, state: Dict[str, Any]) -> Dict[str, Any]:
@@ -80,26 +79,36 @@ class ExplainerAgent:
                 "\n=== Explanation (JSON) ===\n",
                 json.dumps(state["explanation_json"], indent=2, ensure_ascii=False),
             )
-        # ✅ Return FULL state but again ensure 'code' isn't echoed back
+        # Return FULL state but again ensure 'code' isn't echoed back
         return self._merge_return_state(state, {}, drop_keys=("code",))
 
     def _build_messages(self, **kwargs) -> Any:
+        """
+        Build a list of messages for the LLM.
+        Uses the user‑supplied prompt if available; otherwise falls back to an
+        inline prompt that safely injects JSON strings via placeholders.
+        """
         if "msgs" not in kwargs or kwargs["msgs"] is None:
             kwargs = {**kwargs, "msgs": []}
 
+        # Try to get a prompt from the PromptManager
         prompt = None
         getp = getattr(self.prompt_manager, "get_prompt", None)
         if callable(getp):
             prompt = getp(PROMPT_KEY)
+
         if prompt is not None:
-            # Your YAML already has doubled braces for the literal JSON schema.
-            # If a stray KeyError occurs, fall back to inline prompt.
+            # The prompt from PromptManager should already be a PromptTemplate
+            # or a string that can be formatted safely.
             try:
                 return prompt.format_messages(**kwargs)
             except KeyError:
+                # Fall back if the prompt contains unexpected placeholders
                 pass
 
-        # Minimal inline fallback
+        # ------------------------------------------------------------------
+        # Inline fallback – use direct string template instead of nested PromptTemplate
+        # ------------------------------------------------------------------
         schema = {
             "items": [{
                 "antipattern_name": "",
@@ -116,18 +125,27 @@ class ExplainerAgent:
             "trade_offs": [],
             "closing_summary": ""
         }
-        content = (
-            "Given inputs (JSON):\n"
-            + json.dumps({k: v for k, v in kwargs.items() if k != "msgs"}, ensure_ascii=False)
-            + "\nRespond with STRICT JSON using exactly this schema:\n"
-            + json.dumps(schema, ensure_ascii=False)
+
+        # Prepare the JSON strings that will be inserted via placeholders
+        json_input = json.dumps(
+            {k: v for k, v in kwargs.items() if k != "msgs"},
+            ensure_ascii=False
         )
+        json_schema = json.dumps(schema, ensure_ascii=False)
+
+        # Create the ChatPromptTemplate directly with string templates
         fallback = ChatPromptTemplate.from_messages([
             ("system", "Return STRICT JSON only. No commentary."),
-            ("user", content),
+            ("user", "Given inputs (JSON):\n{json_input}\nRespond with STRICT JSON using exactly this schema:\n{json_schema}"),
             MessagesPlaceholder("msgs"),
         ])
-        return fallback.format_messages(**kwargs)
+
+        # Format the messages with the prepared JSON strings
+        return fallback.format_messages(
+            json_input=json_input,
+            json_schema=json_schema,
+            msgs=kwargs["msgs"]
+        )
 
     @staticmethod
     def _fallback_payload(state: Dict[str, Any]) -> Dict[str, Any]:
