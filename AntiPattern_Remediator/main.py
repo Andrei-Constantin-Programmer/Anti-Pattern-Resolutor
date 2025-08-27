@@ -1,7 +1,9 @@
+
 """
 Main entry point - Legacy Code Migration Tool
 """
 from config.settings import initialize_settings
+# from scripts import seed_database
 from dotenv import load_dotenv
 load_dotenv()
 from colorama import Fore, Style
@@ -10,35 +12,11 @@ from pathlib import Path
 from full_repo_workflow import run_full_repo_workflow
 
 
-
-def main():
-    """Main function: Run antipattern analysis"""
-
-    # Let user select provider
-    print("Available providers: 1) ollama  2) ibm  3) vllm")
-    choice = input("Select provider (1-3): ").strip()
-
-    provider_map = {"1": "ollama", "2": "ibm", "3": "vllm"}
-    provider = provider_map.get(choice, "ollama")  # default to ollama
-
-    # Let us choose which DB to interact with
-    print("Choose your trove: 1) ChromaDB (VectorDB) 2) TinyDB (DocumentDB)")
-    db_choice = input("Choose 1 or 2: ").strip()
-
-    # Initialize global settings with selected provider
-    settings = initialize_settings(provider)
-    print(Fore.GREEN + f"Using {settings.LLM_PROVIDER} with model {settings.LLM_MODEL}" + Style.RESET_ALL)
-
-    # Temporary Lazy Imports
-    from src.core.graph import CreateGraph
-    from src.data.database import VectorDBManager, TinyDBManager
-    from src.core.prompt import PromptManager
-    from scripts import seed_database
-
-    # Initialize PromptManager
-    print("Initializing PromptManager...")
-    prompt_manager = PromptManager()
-
+def run_code_snippet_workflow(settings, db_manager, prompt_manager, langgraph):
+    """Run the original workflow with a hardcoded Java code snippet."""
+    print(Fore.BLUE + "\n=== Code Snippet Analysis Workflow ===" + Style.RESET_ALL)
+    print("Analyzing the provided Java code snippet...")
+    
     # Example Java code
     legacy_code = """
     public class ApplicationManager {
@@ -77,8 +55,7 @@ def main():
         }
     }
     """
-
-    # Initial workflow state
+    
     initial_state = {
         "code": legacy_code,
         "context": None,
@@ -89,12 +66,58 @@ def main():
         "code_review_results": None,
         "code_review_times": 0,
         "msgs": [],
-        "answer": None,
-
-        # ExplainerAgent fields
-        "explanation_response_raw": None,
-        "explanation_json": None,
+        "answer": None
     }
+
+    final_state = langgraph.invoke(initial_state)
+
+    print(Fore.GREEN + f"\nAnalysis Complete!" + Style.RESET_ALL)
+    print(f"Final state keys: {list(final_state.keys())}")
+    print(f"Context retrieved: {'Yes' if final_state.get('context') else 'No'}")
+    print(f"Analysis completed: {'Yes' if final_state.get('antipatterns_scanner_results') else 'No'}")
+    print(f"Refactored code: {'Yes' if final_state.get('refactored_code') else 'No'}")
+    print(f"Code review results: {final_state.get('code_review_times')}")
+
+
+def main():
+    """Main function: Choose between code snippet analysis or full repository run"""
+
+    print(Fore.BLUE + "=== AntiPattern Remediator Tool ===" + Style.RESET_ALL)
+    print("Choose your analysis mode:")
+    print("1) Code Snippet Analysis - Analyze a sample Java code snippet")
+    print("2) Full Repository Run - Process files with 100% test coverage from JaCoCo results")
+    
+    # Let user choose analysis mode
+    mode_choice = input("\nSelect mode (1-2): ").strip()
+    
+    if mode_choice not in ["1", "2"]:
+        print(Fore.RED + "Invalid choice. Defaulting to Code Snippet Analysis." + Style.RESET_ALL)
+        mode_choice = "1"
+    
+    # Let user select provider
+    print("\nAvailable providers: 1) ollama  2) ibm  3) vllm")
+    choice = input("Select provider (1-3): ").strip()
+
+    provider_map = {"1": "ollama", "2": "ibm", "3": "vllm"}
+    provider = provider_map.get(choice, "ollama")  # default to ollama
+
+    # Let us choose which DB to interact with
+    print("Choose your trove: 1) ChromaDB (VectorDB) 2) TinyDB (DocumentDB)")
+    db_choice = input("Choose 1 or 2: ").strip()
+
+    # Initialize global settings with selected provider
+    settings = initialize_settings(provider)
+    print(Fore.GREEN + f"Using {settings.LLM_PROVIDER} with model {settings.LLM_MODEL}" + Style.RESET_ALL)
+
+    # Temporary Lazy Imports
+    from src.core.graph import CreateGraph
+    from src.data.database import VectorDBManager, TinyDBManager
+    from src.core.prompt import PromptManager
+    from scripts import seed_database
+
+    # Initialize PromptManager
+    print("Initializing PromptManager...")
+    prompt_manager = PromptManager()
 
     # Setup Database
     if db_choice == "2":
@@ -110,22 +133,11 @@ def main():
     retriever = db_manager.as_retriever()
     langgraph = CreateGraph(db_manager, prompt_manager, retriever=retriever).workflow
 
-    # Final results summary
-    print(Fore.GREEN + f"\nAnalysis Complete!" + Style.RESET_ALL)
-    print(f"Final state keys: {list(final_state.keys())}")
-    print(f"Context retrieved: {'Yes' if final_state.get('context') else 'No'}")
-    print(f"Analysis completed: {'Yes' if final_state.get('antipatterns_scanner_results') else 'No'}")
-    print(f"Refactored code: {'Yes' if final_state.get('refactored_code') else 'No'}")
-    print(f"Code review results: {final_state.get('code_review_times')}")
-
-    # Show explanation from ExplainerAgent
-    if final_state.get("explanation_json"):
-        import json
-        print(Fore.CYAN + "\n=== Explanation (JSON) ===" + Style.RESET_ALL)
-        print(json.dumps(final_state["explanation_json"], indent=2, ensure_ascii=False))
+    # Run the selected workflow
+    if mode_choice == "1":
+        run_code_snippet_workflow(settings, db_manager, prompt_manager, langgraph)
     else:
-        print(Fore.RED + "\nNo explanation was generated." + Style.RESET_ALL)
-
+        run_full_repo_workflow(settings, db_manager, prompt_manager, langgraph)
 
 if __name__ == "__main__":
     main()
