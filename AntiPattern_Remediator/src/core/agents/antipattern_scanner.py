@@ -15,7 +15,7 @@ from pathlib import Path
 
 class AntipatternScanner:
     """Antipattern scanner agent"""
-    
+
     def __init__(self, tool, model, prompt_manager: PromptManager):
         self.prompt_manager = prompt_manager
         self.tool = tool
@@ -28,17 +28,17 @@ class AntipatternScanner:
             search_query = f"Java antipatterns code analysis: {state['code'][:50]}"
             # Use retriever_tool to get relevant context
             context = self.tool.invoke({"query": search_query})
-            
+
             # Get current file path from state
             current_file_path = state['current_file_path']
-            
+
             # Extract project key and relative file path from the current file path
             project_key = None
             relative_file_path = None
-            
+
             if current_file_path:
                 path_obj = Path(current_file_path)
-                
+
                 # Find the repository name (project key) by looking for 'clones' directory
                 for i, part in enumerate(path_obj.parts):
                     if part == 'clones' and i + 1 < len(path_obj.parts):
@@ -46,7 +46,7 @@ class AntipatternScanner:
                         # Get the relative path from the repository root
                         relative_file_path = str(Path(*path_obj.parts[i + 2:]))
                         break
-                        
+
             api = SonarQubeAPI()
             print(Fore.CYAN + f"Using SonarQube project: {project_key}, file: {relative_file_path}" + Style.RESET_ALL)
             issues = api.get_issues_for_file(project_key=project_key, file_path=relative_file_path)
@@ -64,7 +64,7 @@ class AntipatternScanner:
         print("Analyzing code for antipatterns...")
         try:
             prompt_template = self.prompt_manager.get_prompt(self.prompt_manager.ANTIPATTERN_SCANNER)
-            
+
             # Get historical messages from state, or use empty list if none exist
             msgs = state.get('msgs', [])
 
@@ -74,7 +74,7 @@ class AntipatternScanner:
                 sonarqube_issues=state['context'].get('solutions', ''),
                 msgs=msgs
             )
-            
+
             response = self.llm.invoke(formatted_messages)
             state["antipatterns_scanner_results"] = response.content if hasattr(response, 'content') else str(response)
             print(Fore.GREEN + "Analysis completed successfully" + Style.RESET_ALL)
@@ -82,12 +82,11 @@ class AntipatternScanner:
             print(Fore.RED + f"Error during analysis: {e}" + Style.RESET_ALL)
             state["antipatterns_scanner_results"] = f"Error occurred during analysis: {e}"
         return state
-        
-    def display_antipatterns_results(self, state: AgentState): 
+
+    def display_antipatterns_results(self, state: AgentState):
         """Display the final analysis results"""
         print("\nANTIPATTERN ANALYSIS RESULTS")
         print("=" * 60)
         print(state.get("antipatterns_scanner_results", "No analysis results available."))
         print("=" * 60)
         return state
-    

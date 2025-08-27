@@ -19,6 +19,7 @@ from ..agents import CodeReviewerAgent
 import os
 from langsmith import Client
 from langchain.callbacks.tracers import LangChainTracer
+from operator import add
 
 from colorama import Fore, Style
 
@@ -78,6 +79,7 @@ class CreateGraph:
             "strategist": RefactorStrategist(self.llm, self.prompt_manager, retriever=self.retriever),
             "transformer": CodeTransformer(self.llm, self.prompt_manager),
             "reviewer": CodeReviewerAgent(self.llm, self.prompt_manager),
+
         }
 
         # Build the LangGraph workflow
@@ -104,6 +106,10 @@ class CreateGraph:
         graph.add_node("review_code", self.agents["reviewer"].review_code)
         graph.add_node("display_code_review_results", self.agents["reviewer"].display_code_review_results)
 
+        # Explainer: final storytelling
+        graph.add_node("explain_antipattern", self.agents["explainer"].explain_antipattern)
+        graph.add_node("display_explanation", self.agents["explainer"].display_explanation)
+
         # Topology
         graph.set_entry_point("retrieve_context")
         graph.add_edge("retrieve_context", "analyze_antipatterns")
@@ -113,6 +119,7 @@ class CreateGraph:
         graph.add_edge("display_refactoring_results", "transform_code")
         graph.add_edge("transform_code", "display_transformed_code")
         graph.add_edge("display_transformed_code", "review_code")
+        graph.add_edge("review_code", "explain_antipattern")
 
         graph.add_conditional_edges(
             "review_code",
@@ -124,5 +131,7 @@ class CreateGraph:
         )
 
         graph.add_edge("display_code_review_results", END)
+        graph.add_edge("explain_antipattern", "display_explanation")
+        graph.add_edge("display_explanation", END)
 
         return graph.compile()
