@@ -18,3 +18,5 @@ class AgentState(TypedDict):
     msgs: List[Dict[str, Any]]   # Message history for conversation context
     answer: Optional[str]        # Analysis result
     current_file_path: Optional[str]         # Path to the current file being processed
+    explanation_response_raw: Optional[str]      # Raw LLM output from explainer
+    explanation_json: Optional[Dict[str, Any]]   # Parsed JSON explanation

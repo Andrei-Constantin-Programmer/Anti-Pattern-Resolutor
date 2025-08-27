@@ -47,14 +47,18 @@ class AntipatternScanner:
                         relative_file_path = str(Path(*path_obj.parts[i + 2:]))
                         break
 
-            api = SonarQubeAPI()
-            print(Fore.CYAN + f"Using SonarQube project: {project_key}, file: {relative_file_path}" + Style.RESET_ALL)
-            issues = api.get_issues_for_file(project_key=project_key, file_path=relative_file_path)
-            solutions = []
-            for issue in issues["issues"]:
-                solutions.append(api.get_rules_and_fix_method(rule_key=issue['rule']))
-            state["context"] = {"sonarqube_issues": issues, "search_context": context, "solutions": solutions}
+                api = SonarQubeAPI()
+                print(Fore.CYAN + f"Using SonarQube project: {project_key}, file: {relative_file_path}" + Style.RESET_ALL)
+                issues = api.get_issues_for_file(project_key=project_key, file_path=relative_file_path)
+                solutions = []
+                for issue in issues["issues"]:
+                    solutions.append(api.get_rules_and_fix_method(rule_key=issue['rule']))
+                state["context"] = {"sonarqube_issues": issues, "search_context": context, "solutions": solutions}
+            else:
+                state["context"] = {"sonarqube_issues": None, "search_context": context, "solutions": []}
+
             print(Fore.GREEN + f"Successfully retrieved relevant context" + Style.RESET_ALL)
+            
         except Exception as e:
             print(Fore.RED + f"Error retrieving context: {e}" + Style.RESET_ALL)
             state["context"] = "No additional context available due to retrieval error."

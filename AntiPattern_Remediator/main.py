@@ -9,6 +9,8 @@ load_dotenv()
 from colorama import Fore, Style
 import os
 from pathlib import Path
+import json
+
 from full_repo_workflow import run_full_repo_workflow
 
 
@@ -66,7 +68,10 @@ def run_code_snippet_workflow(settings, db_manager, prompt_manager, langgraph):
         "code_review_results": None,
         "code_review_times": 0,
         "msgs": [],
-        "answer": None
+        "answer": None,
+        "current_file_path": None,  # Track current file being processed
+        "explanation_response_raw": None,
+        "explanation_json": None,
     }
 
     final_state = langgraph.invoke(initial_state)
@@ -77,6 +82,13 @@ def run_code_snippet_workflow(settings, db_manager, prompt_manager, langgraph):
     print(f"Analysis completed: {'Yes' if final_state.get('antipatterns_scanner_results') else 'No'}")
     print(f"Refactored code: {'Yes' if final_state.get('refactored_code') else 'No'}")
     print(f"Code review results: {final_state.get('code_review_times')}")
+    
+    # Show explanation from ExplainerAgent
+    if final_state.get("explanation_json"):
+        print(Fore.CYAN + "\n=== Explanation (JSON) ===" + Style.RESET_ALL)
+        print(json.dumps(final_state["explanation_json"], indent=2, ensure_ascii=False))
+    else:
+        print(Fore.RED + "\nNo explanation was generated." + Style.RESET_ALL)
 
 
 def main():

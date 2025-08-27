@@ -14,6 +14,7 @@ from ..agents import AntipatternScanner
 from ..agents import RefactorStrategist
 from ..agents import CodeTransformer
 from ..agents import CodeReviewerAgent
+from ..agents import ExplainerAgent
 
 # Imports for LangSmith tracing
 import os
@@ -63,7 +64,7 @@ class CreateGraph:
         self.prompt_manager = prompt_manager
         self.conditional_edges = ConditionalEdges()
 
-        # ✅ assign the instance attribute before use
+        # assign the instance attribute before use
         self.retriever = retriever or self.db_manager.as_retriever()
 
         retriever_tool = create_retriever_tool(
@@ -79,6 +80,7 @@ class CreateGraph:
             "strategist": RefactorStrategist(self.llm, self.prompt_manager, retriever=self.retriever),
             "transformer": CodeTransformer(self.llm, self.prompt_manager),
             "reviewer": CodeReviewerAgent(self.llm, self.prompt_manager),
+            "explainer": ExplainerAgent(self.llm, self.prompt_manager)
 
         }
 
@@ -130,7 +132,7 @@ class CreateGraph:
             },
         )
 
-        graph.add_edge("display_code_review_results", END)
+        graph.add_edge("display_code_review_results", "explain_antipattern")
         graph.add_edge("explain_antipattern", "display_explanation")
         graph.add_edge("display_explanation", END)
 
