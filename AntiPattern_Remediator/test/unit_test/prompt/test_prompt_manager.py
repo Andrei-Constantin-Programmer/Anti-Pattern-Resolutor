@@ -44,7 +44,6 @@ except ImportError as e:
             self.REFACTOR_STRATEGIST = "refactor_strategist"
             self.CODE_TRANSFORMER = "code_transformer"
             self.CODE_REVIEWER = "code_reviewer"
-            self.EXPLAINER_AGENT = "explainer"
             self.prompt_directory = Path(__file__).parent
             self._prompt_cache = {}
             self._load_all_prompts()  # Call this to match real behavior
@@ -88,8 +87,7 @@ except ImportError as e:
                 self.ANTIPATTERN_SCANNER,
                 self.REFACTOR_STRATEGIST,
                 self.CODE_TRANSFORMER,
-                self.CODE_REVIEWER,
-                self.EXPLAINER_AGENT,
+                self.CODE_REVIEWER
             ]
             
             for prompt_key in prompt_constants:
@@ -157,7 +155,6 @@ class TestPromptManagerInitialization:
             assert hasattr(manager, 'REFACTOR_STRATEGIST')
             assert hasattr(manager, 'CODE_TRANSFORMER')
             assert hasattr(manager, 'CODE_REVIEWER')
-            assert hasattr(manager, 'EXPLAINER_AGENT')
             assert hasattr(manager, 'prompt_directory')
             assert hasattr(manager, '_prompt_cache')
             assert isinstance(manager._prompt_cache, dict)
@@ -179,7 +176,6 @@ class TestPromptManagerInitialization:
             assert manager.REFACTOR_STRATEGIST == "refactor_strategist"
             assert manager.CODE_TRANSFORMER == "code_transformer"
             assert manager.CODE_REVIEWER == "code_reviewer"
-            assert manager.EXPLAINER_AGENT == "explainer"
     
     def test_prompt_directory_is_set_correctly(self):
         """Test that prompt directory is assigned from settings."""
@@ -509,7 +505,6 @@ class TestErrorHandlingAndEdgeCases:
             manager.REFACTOR_STRATEGIST = "refactor_strategist" 
             manager.CODE_TRANSFORMER = "code_transformer"
             manager.CODE_REVIEWER = "code_reviewer"
-            manager.EXPLAINER_AGENT = "explainer"
             manager.prompt_directory = Path("/non/existent/path")
             manager._prompt_cache = {}
             
@@ -580,12 +575,6 @@ class TestPromptLoadingIntegration:
                         'system': 'You are an expert code reviewer.',
                         'user': 'Review this code for quality and best practices: {code}'
                     }
-                },
-                'explainer.yaml': {
-                    'explainer': {
-                        'system': 'You are a senior software code explainer.',
-                        'user': 'Explain: {code}\nLang: {language}\nCtx: {context}'
-                    }
                 }
             }
             
@@ -604,7 +593,6 @@ class TestPromptLoadingIntegration:
             manager.REFACTOR_STRATEGIST = "refactor_strategist"
             manager.CODE_TRANSFORMER = "code_transformer"
             manager.CODE_REVIEWER = "code_reviewer"
-            manager.EXPLAINER_AGENT = "explainer"
             manager.prompt_directory = temp_prompt_files
             manager._prompt_cache = {}
             
@@ -612,16 +600,15 @@ class TestPromptLoadingIntegration:
             manager._load_all_prompts()
             
             # Assert: Verify all prompts were loaded
-            assert len(manager._prompt_cache) == 5
+            assert len(manager._prompt_cache) == 4
             assert "antipattern_scanner" in manager._prompt_cache
             assert "refactor_strategist" in manager._prompt_cache
             assert "code_transformer" in manager._prompt_cache
             assert "code_reviewer" in manager._prompt_cache
-            assert "explainer" in manager._prompt_cache
             
             # Verify success message
             captured = capsys.readouterr()
-            assert "Successfully loaded 5 prompts" in captured.out
+            assert "Successfully loaded 4 prompts" in captured.out
     
     def test_load_all_prompts_handles_partial_failures(self, capsys):
         """Test that _load_all_prompts continues loading even if some files are missing."""
@@ -646,7 +633,6 @@ class TestPromptLoadingIntegration:
                 manager.REFACTOR_STRATEGIST = "refactor_strategist"
                 manager.CODE_TRANSFORMER = "code_transformer"
                 manager.CODE_REVIEWER = "code_reviewer"
-                manager.EXPLAINER_AGENT = "explainer"
                 manager.prompt_directory = temp_path
                 manager._prompt_cache = {}
                 
