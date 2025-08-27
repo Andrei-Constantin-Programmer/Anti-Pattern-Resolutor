@@ -20,7 +20,6 @@ from ..agents import ExplainerAgent
 import os
 from langsmith import Client
 from langchain.callbacks.tracers import LangChainTracer
-from operator import add
 
 from colorama import Fore, Style
 
@@ -37,7 +36,7 @@ class CreateGraph:
             **getattr(settings, "parameters", {})
         )
 
-        # LangSmith integration
+        # LangSmith integration (optional)
         if settings.LLM_PROVIDER in ["ollama", "vllm"] and settings.LANGSMITH_ENABLED:
             try:
                 os.environ["LANGCHAIN_TRACING_V2"] = "true"
@@ -64,7 +63,7 @@ class CreateGraph:
         self.prompt_manager = prompt_manager
         self.conditional_edges = ConditionalEdges()
 
-        # assign the instance attribute before use
+        # Assign the instance attribute before use
         self.retriever = retriever or self.db_manager.as_retriever()
 
         retriever_tool = create_retriever_tool(
@@ -76,19 +75,17 @@ class CreateGraph:
         # Agents
         self.agents = {
             "scanner": AntipatternScanner(retriever_tool, self.llm, self.prompt_manager),
-            # If your strategist uses the unified invoke-style retriever:
             "strategist": RefactorStrategist(self.llm, self.prompt_manager, retriever=self.retriever),
             "transformer": CodeTransformer(self.llm, self.prompt_manager),
             "reviewer": CodeReviewerAgent(self.llm, self.prompt_manager),
-            "explainer": ExplainerAgent(self.llm, self.prompt_manager)
-
+            "explainer": ExplainerAgent(self.llm, self.prompt_manager),
         }
 
         # Build the LangGraph workflow
         self.workflow = self._build_graph()
 
     def _build_graph(self):
-        """Build LangGraph workflow"""
+        """Build LangGraph workflow and return the compiled graph."""
         graph = StateGraph(AgentState)
 
         # Scanner: retrieve + analyze
@@ -121,8 +118,8 @@ class CreateGraph:
         graph.add_edge("display_refactoring_results", "transform_code")
         graph.add_edge("transform_code", "display_transformed_code")
         graph.add_edge("display_transformed_code", "review_code")
-        graph.add_edge("review_code", "explain_antipattern")
 
+        # Conditional: either loop back to transform_code or proceed to display_code_review_results
         graph.add_conditional_edges(
             "review_code",
             self.conditional_edges.code_review_condition,
@@ -132,8 +129,11 @@ class CreateGraph:
             },
         )
 
+        # Only reach explainer after the "pass" path completes
         graph.add_edge("display_code_review_results", "explain_antipattern")
         graph.add_edge("explain_antipattern", "display_explanation")
         graph.add_edge("display_explanation", END)
 
-        return graph.compile()
+        # Compile and return
+        compiled = graph.compile()
+        return compiled
