@@ -34,6 +34,7 @@ class ExplainerAgent:
 
     def explain_antipattern(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """Generate explanation JSON for detected antipatterns and refactor."""
+        print("Preparing to Explain...")
         kwargs = dict(
             code=state.get("code", ""),
             context=state.get("context", ""),
