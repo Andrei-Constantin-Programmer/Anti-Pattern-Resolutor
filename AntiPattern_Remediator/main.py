@@ -10,6 +10,7 @@ from pathlib import Path
 from full_repo_workflow import run_full_repo_workflow
 
 
+
 def main():
     """Main function: Run antipattern analysis"""
 
