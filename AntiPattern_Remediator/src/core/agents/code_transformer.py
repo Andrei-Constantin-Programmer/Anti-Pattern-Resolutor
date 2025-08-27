@@ -4,6 +4,7 @@ Agent responsible for refactoring code based on analysis.
 from ..state import AgentState
 from colorama import Fore, Style
 from ..prompt import PromptManager
+import re
 
 
 class CodeTransformer:
@@ -12,6 +13,30 @@ class CodeTransformer:
     def __init__(self, model, prompt_manager: PromptManager):
         self.llm = model
         self.prompt_manager = prompt_manager
+    
+    def extract_java(s: str) -> str:
+        
+        # Strip common wrappers
+        fences = [
+            (r"^```[a-zA-Z0-9]*\n(.*?)\n```$", re.DOTALL),
+            (r'^"""\s*\n?(.*?)\n?"""$',       re.DOTALL),
+            (r"^'''\s*\n?(.*?)\n?'''$",       re.DOTALL),
+        ]
+        for pat, flg in fences:
+            m = re.match(pat, s, flags=flg)
+            if m:
+                s = m.group(1).strip()
+                break
+
+        # Also remove stray leading/trailing fence lines if any
+        s = re.sub(r"^```[a-zA-Z0-9]*\n?", "", s)
+        s = re.sub(r"\n?```$", "", s)
+        s = re.sub(r'^"""\n?', "", s)
+        s = re.sub(r'\n?"""$', "", s)
+        s = re.sub(r"^'''\n?", "", s)
+        s = re.sub(r"\n?'''$", "", s)
+
+        return s.strip()
 
     def transform_code(self, state: AgentState) -> AgentState:
         print("--- TRANSFORMING CODE ---")
@@ -44,6 +69,7 @@ class CodeTransformer:
                 state["refactored_code"] = "Error: No valid response received from LLM."
                 raise ValueError("No valid response received from LLM.")
             refactored_code = response.content.strip()
+            refactored_code = CodeTransformer.extract_java(refactored_code)
 
             print(Fore.GREEN + "Code transformation complete." + Style.RESET_ALL)
             state["refactored_code"] = refactored_code

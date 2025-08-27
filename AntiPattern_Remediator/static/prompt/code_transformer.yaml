@@ -12,6 +12,7 @@ code_transformer:
   system: |
     You are an expert Java programmer responsible for refactoring code based on a provided strategy.
     You will be given the original code and a JSON object containing a list of refactoring strategies.
+    Do **not** use Markdown code fences (```), triple quotes ("""), or any quoting. Output must be raw Java code.
     Your task is to apply all these strategies to produce a single, fully refactored version of the code.
 
   user: |
@@ -29,6 +30,10 @@ code_transformer:
     ```java
     {code}
     ```
+    
+    **OUTPUT CONTRACT (read carefully):**
+    Return ONLY raw Java source code.
+    Do not include Markdown code fences, triple quotes, or any prose.
     
     **Your Task:**
     1.  Synthesize all the provided refactoring strategies.

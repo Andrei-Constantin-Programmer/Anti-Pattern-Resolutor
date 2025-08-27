@@ -2,9 +2,15 @@
 Antipattern scanner agent for detecting code smells and antipatterns
 """
 
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
+
 from ..state import AgentState
 from colorama import Fore, Style
 from ..prompt import PromptManager
+from sonarqube_tool import SonarQubeAPI
+from pathlib import Path
 
 
 class AntipatternScanner:
@@ -22,7 +28,32 @@ class AntipatternScanner:
             search_query = f"Java antipatterns code analysis: {state['code'][:50]}"
             # Use retriever_tool to get relevant context
             context = self.tool.invoke({"query": search_query})
-            state["context"] = context
+            
+            # Get current file path from state
+            current_file_path = state['current_file_path']
+            
+            # Extract project key and relative file path from the current file path
+            project_key = None
+            relative_file_path = None
+            
+            if current_file_path:
+                path_obj = Path(current_file_path)
+                
+                # Find the repository name (project key) by looking for 'clones' directory
+                for i, part in enumerate(path_obj.parts):
+                    if part == 'clones' and i + 1 < len(path_obj.parts):
+                        project_key = path_obj.parts[i + 1]  # Repository name as project key
+                        # Get the relative path from the repository root
+                        relative_file_path = str(Path(*path_obj.parts[i + 2:]))
+                        break
+                        
+            api = SonarQubeAPI()
+            print(Fore.CYAN + f"Using SonarQube project: {project_key}, file: {relative_file_path}" + Style.RESET_ALL)
+            issues = api.get_issues_for_file(project_key=project_key, file_path=relative_file_path)
+            solutions = []
+            for issue in issues["issues"]:
+                solutions.append(api.get_rules_and_fix_method(rule_key=issue['rule']))
+            state["context"] = {"sonarqube_issues": issues, "search_context": context, "solutions": solutions}
             print(Fore.GREEN + f"Successfully retrieved relevant context" + Style.RESET_ALL)
         except Exception as e:
             print(Fore.RED + f"Error retrieving context: {e}" + Style.RESET_ALL)
@@ -39,7 +70,8 @@ class AntipatternScanner:
 
             formatted_messages = prompt_template.format_messages(
                 code=state['code'],
-                context=state['context'],
+                context=state['context'].get('search_context', ''),
+                sonarqube_issues=state['context'].get('solutions', ''),
                 msgs=msgs
             )
             
