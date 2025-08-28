@@ -108,7 +108,9 @@ def process_java_files_with_workflow(file_paths: list, settings, db_manager, pro
             "code_review_times": 0,
             "msgs": [],
             "answer": None,
-            "current_file_path": file_path  # Track current file being processed
+            "current_file_path": file_path,  # Track current file being processed
+            "explanation_response_raw": None,
+            "explanation_json": None
         }
         
         try:
