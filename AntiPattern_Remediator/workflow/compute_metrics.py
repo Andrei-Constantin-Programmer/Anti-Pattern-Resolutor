@@ -55,7 +55,7 @@ def _process_lizard_result(lizard_result, source_code: str, filename: str, sourc
         "total_functions": len(functions),
         "avg_cc": round(sum(f["cyclomatic_complexity"] for f in functions)/len(functions), 2) if functions else 0.0,
         "max_cc": max((f["cyclomatic_complexity"] for f in functions), default=0),
-        "max_nd_in_file": max((f["effective_nesting_depth"] for f in functions), default=0),
+        "max_nd_in_file": max((f["max_nesting_depth"] for f in functions), default=0),
         "functions": functions,
     }
     
