@@ -48,6 +48,7 @@ idna==3.10
 importlib_metadata==8.7.0
 importlib_resources==6.5.2
 iniconfig==2.1.0
+javalang==0.13.0
 jaraco.classes==3.4.0
 jaraco.context==6.0.1
 jaraco.functools==4.2.1
@@ -70,6 +71,7 @@ langgraph-checkpoint==2.1.0
 langgraph-prebuilt==0.5.2
 langgraph-sdk==0.1.72
 langsmith==0.4.4
+lizard==1.17.31
 lomond==0.3.3
 markdown-it-py==3.0.0
 marshmallow==3.26.1
