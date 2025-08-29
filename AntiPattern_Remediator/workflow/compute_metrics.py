@@ -2,60 +2,63 @@ import json, os
 from pathlib import Path
 import lizard
 import re
+import javalang
 
-def calculate_nesting_depth(source_code: str, start_line: int, end_line: int) -> int:
+def calculate_nesting_depth(code: str) -> int:
     """
-    Calculate the maximum nesting depth for a function by counting braces and control structures.
+    Calculate the maximum nesting depth for a function.
     """
-    lines = source_code.split('\n')
-    function_lines = lines[start_line-1:end_line]
-    
+    tree = javalang.parse.parse(code)
+
     max_depth = 0
-    current_depth = 0
-    
-    for line in function_lines:
-        # Remove string literals and comments to avoid false positives
-        cleaned_line = re.sub(r'\".*?\"', '', line)  # Remove string literals
-        cleaned_line = re.sub(r'//.*', '', cleaned_line)  # Remove line comments
-        
-        # Count opening braces and control structures that increase nesting
-        # Note: This is a simplified approach and might not catch all cases
-        for char in cleaned_line:
-            if char == '{':
-                current_depth += 1
-                max_depth = max(max_depth, current_depth)
-            elif char == '}':
-                current_depth = max(0, current_depth - 1)
-    
+
+    def walk(node, depth=0):
+        nonlocal max_depth
+        max_depth = max(max_depth, depth)
+        if isinstance(node, (javalang.tree.IfStatement,
+                             javalang.tree.ForStatement,
+                             javalang.tree.WhileStatement,
+                             javalang.tree.TryStatement,
+                             javalang.tree.SwitchStatement)):
+            depth += 1
+        for child in getattr(node, 'children', []):
+            if isinstance(child, (list, tuple)):
+                for c in child:
+                    if isinstance(c, javalang.ast.Node):
+                        walk(c, depth)
+            elif isinstance(child, javalang.ast.Node):
+                walk(child, depth)
+
+    walk(tree)
     return max_depth
+
 
 def _process_lizard_result(lizard_result, source_code: str, filename: str, source_type: str = "file"):
     """
     Helper function to process lizard analysis results and extract metrics.
     """
     functions = []
-    for fn in lizard_result.function_list:
-        
-        # Calculate nesting depth
-        nesting_depth = calculate_nesting_depth(source_code, fn.start_line, fn.end_line)
-        
+    
+    for fn in lizard_result.function_list:        
+
         functions.append({
             "name": fn.long_name,                 
             "start_line": fn.start_line,
             "end_line": fn.end_line,
             "nloc": fn.nloc,                      # SLOC (non-comment LOC) for the function
-            "cyclomatic_complexity": fn.cyclomatic_complexity,
-            # Store all nesting metrics for debugging/analysis
-            "max_nesting_depth": nesting_depth        
+            "cyclomatic_complexity": fn.cyclomatic_complexity    
             })
-    
+        
+    # Calculate nesting depth using brace counting approach
+    nesting_depth = calculate_nesting_depth(source_code)
+
     file_metrics = {
         "file": filename,
         "file_sloc_nloc": lizard_result.nloc,              # file-level SLOC (non-comment LOC)
         "total_functions": len(functions),
         "avg_cc": round(sum(f["cyclomatic_complexity"] for f in functions)/len(functions), 2) if functions else 0.0,
         "max_cc": max((f["cyclomatic_complexity"] for f in functions), default=0),
-        "max_nd_in_file": max((f["max_nesting_depth"] for f in functions), default=0),
+        "max_nd_in_file": nesting_depth,
         "functions": functions,
     }
     
@@ -103,7 +106,7 @@ if __name__ == "__main__":
     import argparse
     p = argparse.ArgumentParser()
     p.add_argument("target", help="Path to a .java file or a directory")
-    p.add_argument("--json", action="store_true", help="Print JSON")
+    p.add_argument("--output", "-o", help="Output JSON file path", default="metrics_results.json")
     args = p.parse_args()
 
     results = []
@@ -114,4 +117,17 @@ if __name__ == "__main__":
     else:
         results.append(analyze_file(target))
 
-    print(json.dumps(results, indent=2) if args.json else results)
+    # Save results to JSON file
+    output_path = Path(args.output)
+    with open(output_path, 'w', encoding='utf-8') as f:
+        json.dump(results, f, indent=2)
+    
+    print(f"Metrics analysis complete. Results saved to: {output_path}")
+    print(f"Analyzed {len(results)} file(s)")
+    
+    # Print summary
+    if results:
+        total_functions = sum(r.get('total_functions', 0) for r in results)
+        avg_complexity = sum(r.get('avg_cc', 0) for r in results) / len(results)
+        print(f"Total functions analyzed: {total_functions}")
+        print(f"Average complexity across files: {avg_complexity:.2f}")
