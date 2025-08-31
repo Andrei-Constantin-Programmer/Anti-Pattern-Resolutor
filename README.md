@@ -99,6 +99,12 @@ setx SONARQUBE_TOKEN "paste-your-token"
 # Restart the terminal afterwards
 ```
 
+### Run SonarQube
+```bash
+python remediate_repos.py
+        --token SONARQUBE_TOKEN # If you haven't added a token in the environment
+```
+
 ### Run the Remediator
 ```bash
 python AntiPattern_Remediator/main.py
