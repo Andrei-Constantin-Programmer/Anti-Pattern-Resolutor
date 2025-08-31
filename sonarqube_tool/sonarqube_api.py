@@ -174,9 +174,8 @@ class SonarQubeAPI:
 if __name__ == "__main__":
     api = SonarQubeAPI()
     project_key = "commons-lang"
-    file_path = "src\main\java\org\apache\commons\lang3\BooleanUtils.java"
-    test_file_path = "src/main/java/org/apache/commons/lang3/BooleanUtils.java"
-    issues_file_path = "D:\FILES\IBM-Project-Analysis-Results\common-lang3.9-original\issues.json"
+    file_path = "path/to/java/file" # Testing if SonarQube is working
+    issues_file_path = "path/to/issues.json (post-transformation analysis requirement)"
     rule_key_1 = "java:S2160"
     rule_key_2 = "java:S1117"
     rule_key_3 = "java:S5993"
