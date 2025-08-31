@@ -8,11 +8,49 @@ import json
 from pathlib import Path
 from datetime import datetime
 from colorama import Fore, Style
+from .compute_metrics import analyze_source_code, compare_code_metrics
+
+
+def compute_code_metrics(final_state: dict) -> dict:
+    """Compute metrics for original and refactored code."""
+    try:        
+        metrics_data = {}
+        
+        # Analyze original code
+        if final_state.get('code'):
+            original_metrics = analyze_source_code(final_state['code'], "Original.java")
+            # Remove functions list to keep it simple
+            original_metrics_simplified = {k: v for k, v in original_metrics.items() if k != 'functions'}
+            metrics_data['original_metrics'] = original_metrics_simplified
+        
+        # Analyze refactored code
+        if final_state.get('refactored_code'):
+            refactored_metrics = analyze_source_code(final_state['refactored_code'], "Refactored.java")
+            # Remove functions list to keep it simple
+            refactored_metrics_simplified = {k: v for k, v in refactored_metrics.items() if k != 'functions'}
+            metrics_data['refactored_metrics'] = refactored_metrics_simplified
+            
+            # Compare if both exist
+            if final_state.get('code'):
+                comparison = compare_code_metrics(
+                    original_metrics,  # Pass the full metrics objects
+                    refactored_metrics  # Pass the full metrics objects
+                )
+                # Only include the improvements, not the full original/refactored data
+                metrics_data['improvements'] = comparison['improvements']
+        
+        return metrics_data
+    except Exception as e:
+        print(Fore.YELLOW + f"Warning: Could not compute metrics: {e}" + Style.RESET_ALL)
+        return {}
 
 
 def save_intermediate_results(file_path: str, final_state: dict, settings, results_dir: str = "../processing_results") -> bool:
     """Save intermediate results from the agentic workflow for analysis in markdown format."""
     try:
+        # Compute code metrics
+        metrics_data = compute_code_metrics(final_state)
+
         if file_path != 'java_code_snippet' and not None:
             # Create results directory if it doesn't exist
             results_path = Path(results_dir)
@@ -170,24 +208,78 @@ def save_intermediate_results(file_path: str, final_state: dict, settings, resul
             
             markdown_content += '</div>\n\n'
             
-            # Add code comparison summary
-            if original_code and refactored_code:
-                original_lines = len(original_code.splitlines())
-                refactored_lines = len(refactored_code.splitlines())
-                line_change = refactored_lines - original_lines
-                line_change_str = f"+{line_change}" if line_change > 0 else str(line_change)
-                
-                markdown_content += f"**Code Metrics:**\n"
-                markdown_content += f"- Original Loc: {original_lines}\n"
-                markdown_content += f"- Refactored Loc: {refactored_lines}\n"
-                markdown_content += f"- LoC change: {line_change_str}\n\n"
         else:
             markdown_content += "No code available for comparison.\n\n"
+        
+        # Add code metrics section
+        if metrics_data:
+            markdown_content += "---\n\n## Code Metrics\n\n"
+            
+            # Display Original and Refactored metrics side by side
+            if 'original_metrics' in metrics_data and 'refactored_metrics' in metrics_data:
+                orig = metrics_data['original_metrics']
+                refac = metrics_data['refactored_metrics']
+
+                markdown_content += "### Original vs Refactored Code \n\n"
+                markdown_content += "| Metric | Original | Refactored |\n"
+                markdown_content += "|--------|----------|------------|\n"
+                markdown_content += f"| **Source Lines of Code (SLOC)** | {orig.get('file_sloc_nloc', 'N/A')} | {refac.get('file_sloc_nloc', 'N/A')} |\n"
+                markdown_content += f"| **Total Functions** | {orig.get('total_functions', 'N/A')} | {refac.get('total_functions', 'N/A')} |\n"
+                markdown_content += f"| **Average Cyclomatic Complexity** | {orig.get('avg_cc', 'N/A')} | {refac.get('avg_cc', 'N/A')} |\n"
+                markdown_content += f"| **Max Cyclomatic Complexity** | {orig.get('max_cc', 'N/A')} | {refac.get('max_cc', 'N/A')} |\n"
+                markdown_content += f"| **Max Nesting Depth** | {orig.get('max_nd_in_file', 'N/A')} | {refac.get('max_nd_in_file', 'N/A')} |\n\n"
+            
+            elif 'original_metrics' in metrics_data:
+                orig = metrics_data['original_metrics']
+                markdown_content += "### Original Code Metrics\n\n"
+                markdown_content += f"- **Source Lines of Code (SLOC):** {orig.get('file_sloc_nloc', 'N/A')}\n"
+                markdown_content += f"- **Total Functions:** {orig.get('total_functions', 'N/A')}\n"
+                markdown_content += f"- **Average Cyclomatic Complexity:** {orig.get('avg_cc', 'N/A')}\n"
+                markdown_content += f"- **Max Cyclomatic Complexity:** {orig.get('max_cc', 'N/A')}\n"
+                markdown_content += f"- **Max Nesting Depth:** {orig.get('max_nd_in_file', 'N/A')}\n\n"
+            
+            # Display Improvements
+            if 'improvements' in metrics_data:
+                imp = metrics_data['improvements']
+                markdown_content += "### Comparison\n\n"
+
+                sloc_change = imp.get('sloc_reduction', 0)
+                func_change = imp.get('function_count_change', 0)
+                avg_cc_imp = imp.get('avg_cc_improvement', 0)
+                max_cc_red = imp.get('max_cc_reduction', 0)
+                nest_red = imp.get('max_nesting_reduction', 0)
+                
+                markdown_content += f"- **Lines of Code Change:** {sloc_change:+d} lines\n"
+                markdown_content += f"- **Function Count Change:** {func_change:+d} functions\n"
+                markdown_content += f"- **Average Complexity Improvement:** {avg_cc_imp:+.2f}\n"
+                markdown_content += f"- **Max Complexity Reduction:** {max_cc_red:+d}\n"
+                markdown_content += f"- **Max Nesting Reduction:** {nest_red:+d}\n\n"
         
         markdown_content += f"---\n\n*Generated by AntiPattern Remediator Tool using {settings.LLM_MODEL}*\n"        
         # Save to markdown file
         with open(results_file_path, 'w', encoding='utf-8') as f:
             f.write(markdown_content)
+        
+        # Save metrics to JSON file if available
+        if metrics_data:
+            if file_path != 'java_code_snippet':
+                json_filename = f"{safe_filename}_metrics.json"
+                json_file_path = results_path / json_filename
+            else:
+                json_filename = "java_code_snippet_metrics.json"
+                json_file_path = json_filename
+            
+            # Include file path and timestamp in metrics JSON
+            metrics_with_metadata = {
+                "file_path": file_path,
+                "timestamp": timestamp,
+                "metrics": metrics_data
+            }
+            
+            with open(json_file_path, 'w', encoding='utf-8') as f:
+                json.dump(metrics_with_metadata, f, indent=2)
+            
+            print(Fore.CYAN + f"Code metrics saved: {json_file_path}" + Style.RESET_ALL)
         
         print(Fore.CYAN + f"Intermediate results saved: {results_file_path}" + Style.RESET_ALL)
         return True

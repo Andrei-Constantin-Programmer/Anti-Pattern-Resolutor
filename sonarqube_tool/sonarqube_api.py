@@ -110,18 +110,20 @@ class SonarQubeAPI:
                 result[section_key] = section_content
         return result
 
-    def print_all_issues(self, project_key: str) -> None:
+    def print_all_issues(self, project_key: str, issues_file_path = None) -> None:
         try:
-            issues_data = self.get_all_issues(project_key)
+            if issues_file_path is None:
+                issues_data = self.get_all_issues(project_key)
+            else:
+                with open(issues_file_path, 'r') as f:
+                    issues_data = json.load(f)
             issues = issues_data.get('issues', [])
             total = issues_data.get('total', 0)
             
             severity_count = {}
             for issue in issues:
-                impacts = issue.get('impacts', [])
-                if impacts and len(impacts) > 0:
-                    severity = impacts[0].get('severity', 'UNKNOWN')
-                    severity_count[severity] = severity_count.get(severity, 0) + 1
+                severity = issue.get('severity', 'UNKNOWN')
+                severity_count[severity] = severity_count.get(severity, 0) + 1
             print(f"Total issues: {total}")
             for severity, count in sorted(severity_count.items()):
                 print(f"{severity}: {count}")
@@ -171,15 +173,17 @@ class SonarQubeAPI:
 
 if __name__ == "__main__":
     api = SonarQubeAPI()
-    project_key = "commons-collections"
-    file_path = "src/main/java/org/apache/commons/collections4/map/AbstractHashedMap.java"
+    project_key = "commons-lang"
+    file_path = "src\main\java\org\apache\commons\lang3\BooleanUtils.java"
+    test_file_path = "src/main/java/org/apache/commons/lang3/BooleanUtils.java"
+    issues_file_path = "D:\FILES\IBM-Project-Analysis-Results\common-lang3.9-original\issues.json"
     rule_key_1 = "java:S2160"
     rule_key_2 = "java:S1117"
     rule_key_3 = "java:S5993"
     print(f"Checking scan success for project {project_key}: {api.is_scan_successful(project_key)}")
 
     print("Project issues summary:")
-    api.print_all_issues(project_key)
+    api.print_all_issues(project_key, issues_file_path)
     
     print(f"\nFile issues details:")
     api.print_file_issues(project_key, file_path)
